@@ -1,3 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
+def asistencias(request):
+    return render(request, 'asistencia.html')
