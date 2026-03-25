@@ -13,7 +13,7 @@ function Inicio() {
           <h1 className="hero-title">
             <span className="line1">Iglesia Cristiana</span>
             <span className="line2">
-              <span className="dim">hola</span> Cali
+              <span className="dim">Remanente</span> Cali
             </span>
           </h1>
 
