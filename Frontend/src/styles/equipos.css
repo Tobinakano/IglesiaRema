@@ -1,0 +1,175 @@
+/* Estilos individuales para Equipos */
+
+.ministerios-section {
+  background: #efefef;
+  padding: 80px 24px;
+}
+
+.ministerios-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.ministerio-card {
+  background: white;
+  border-radius: 16px;
+  padding: 48px 36px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid #e8e8e8;
+  min-height: 290px;
+  transition: all .3s ease;
+}
+
+.ministerio-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+}
+
+.ministerio-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  transition: all .3s ease;
+}
+
+.ministerio-card:hover .ministerio-icon {
+  background: #e0e0e0;
+}
+
+.ministerio-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.ministerio-name {
+  font-family: var(--sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.ministerio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border: 1.5px solid #d0d0d0;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  transition: all .3s ease;
+  margin-top: 0px;
+}
+
+.ministerio-btn:hover {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Línea inferior en hover — igual que servicio-card */
+.equipo-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 3px; background: var(--black);
+    border-radius: 0 0 16px 16px;
+    opacity: 0; transition: opacity .25s;
+}
+.equipo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 36px rgba(0,0,0,0.1);
+}
+.equipo-card:hover::after { opacity: 1; }
+
+/* Ícono — igual que servicio-icon / platform-icon-circle */
+.equipo-card-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-bottom: 22px;
+    transition: background .25s;
+}
+.equipo-card-icon svg {
+    width: 32px; height: 32px;
+    color: var(--black);
+}
+.equipo-card:hover .equipo-card-icon {
+    background: var(--black);
+}
+.equipo-card:hover .equipo-card-icon svg {
+    color: var(--white);
+    stroke: var(--white);
+}
+
+/* Nombre — igual que platform-name */
+.equipo-card-name {
+    font-family: var(--serif);
+    font-size: 1.45rem; font-weight: 700;
+    color: var(--black); letter-spacing: 0.01em;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+/* Botón "Ver equipo" — mismo pill que btn-nuevo */
+.equipo-card-btn {
+    display: inline-flex;
+    align-items: center; gap: 8px;
+    padding: 11px 28px;
+    background: var(--white);
+    color: var(--black);
+    font-family: var(--sans);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.05em;
+    border-radius: 50px;
+    border: 1.5px solid #d4d4d4;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    transition: background .2s, border-color .2s, color .2s, box-shadow .2s, transform .2s;
+    margin-top: auto;
+}
+.equipo-card-btn:hover {
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    transform: translateY(-1px);
+}
+.btn-arrow {
+    width: 14px; height: 14px;
+    transition: transform .2s;
+    flex-shrink: 0;
+}
+.equipo-card-btn:hover .btn-arrow {
+    transform: translateX(3px);
+}
+
+@media (max-width: 960px) {
+    .ministerios-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .ministerio-card { padding: 44px 32px 36px; }
+}
+@media (max-width: 560px) {
+    .ministerios-grid { grid-template-columns: 1fr; max-width: 100%; }
+    .ministerios-section { padding: 60px 20px 80px; }
+    .ministerio-card { padding: 40px 28px 32px; min-height: 280px; gap: 16px; }
+    .ministerio-icon { width: 70px; height: 70px; }
+    .ministerio-icon svg { width: 36px; height: 36px; }
+    .ministerio-name { font-size: 1.1rem; }
+    .ministerio-btn { font-size: 0.9rem; padding: 10px 24px; }
+}

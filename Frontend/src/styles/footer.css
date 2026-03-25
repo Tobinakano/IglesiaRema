@@ -1,0 +1,38 @@
+/* FOOTER STYLES */
+.footer-top {
+    background: var(--gray-bg);
+    padding: 24px 40px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.footer-social-icons {
+    display: flex; gap: 20px; align-items: center;
+}
+.footer-social-icons a {
+    color: #444;
+    transition: color .2s, transform .2s;
+    display: flex; align-items: center;
+}
+.footer-social-icons a:hover { color: var(--black); transform: translateY(-2px); }
+.footer-social-icons svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.footer-social-icons .fb-icon { fill: currentColor; stroke: none; }
+
+.footer-address-text {
+    font-size: 16px; color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+}
+.footer-address-text svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.footer-bottom {
+    background: var(--black);
+    padding: 16px 40px;
+    text-align: center;
+}
+
+.footer-copy {
+    font-size: 15.5px; color: rgba(255,255,255,0.35);
+    letter-spacing: 0.02em;
+}
