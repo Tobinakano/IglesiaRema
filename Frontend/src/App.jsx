@@ -9,6 +9,8 @@ import Equipos from "./pages/Equipos";
 import Donaciones from "./pages/Donaciones";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import Registro from "./pages/Registro";
+import RequireAuth from "./components/RequireAuth";
 
 function ScrollToTop() {
   const { pathname, search, hash } = useLocation();
@@ -93,6 +95,12 @@ function App() {
         />
         {/* Login sin Layout, no Navbar/Footer */}
         <Route path="/login" element={<Login />} />
+        {/* Registro protegido, solo para usuarios autenticados */}
+        <Route path="/registro" element={
+          <RequireAuth>
+            <Registro />
+          </RequireAuth>
+        } />
       </Routes>
     </BrowserRouter>
   );

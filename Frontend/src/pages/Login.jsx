@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/global.css";
 import "../styles/login.css";
 
 function Login() {
+  const [usuario, setUsuario] = useState("");
+  const [contrasena, setContrasena] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
   // Añadir clase especial al body solo en Login
   React.useEffect(() => {
     document.body.classList.add("login-body");
@@ -10,6 +16,28 @@ function Login() {
       document.body.classList.remove("login-body");
     };
   }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const res = await fetch("http://localhost:4000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ usuario, contrasena })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Error de autenticación");
+        return;
+      }
+      // Login exitoso
+      navigate("/registro");
+    } catch (err) {
+      setError("Error de red o servidor");
+    }
+  };
 
   return (
     <div className="login-card">
@@ -29,7 +57,7 @@ function Login() {
           <p className="form-subtitle">Ingresa tus credenciales para continuar.</p>
         </div>
         {/* Form */}
-        <form autoComplete="off">
+        <form autoComplete="off" onSubmit={handleSubmit}>
           <div className="form-fields">
             {/* Usuario */}
             <div className="field-wrap">
@@ -44,6 +72,8 @@ function Login() {
                   type="text"
                   placeholder="Tu nombre de usuario"
                   required
+                  value={usuario}
+                  onChange={e => setUsuario(e.target.value)}
                 />
               </div>
             </div>
@@ -61,11 +91,16 @@ function Login() {
                   type="password"
                   placeholder="••••••••"
                   required
+                  value={contrasena}
+                  onChange={e => setContrasena(e.target.value)}
                 />
               </div>
             </div>
 
           </div>
+
+          {/* Error */}
+          {error && <div style={{ color: '#b94a48', margin: '12px 0', fontSize: '1rem' }}>{error}</div>}
 
           {/* Botón */}
           <button className="btn-login" type="submit">
