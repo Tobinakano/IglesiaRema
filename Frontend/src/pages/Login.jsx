@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/global.css";
 import "../styles/login.css";
+import logoNegro from "../assets/images/Logo-negro.png";
 
 function Login() {
   const [usuario, setUsuario] = useState("");
@@ -33,7 +34,7 @@ function Login() {
         return;
       }
       // Login exitoso
-      navigate("/registro");
+      navigate("/admin/personas");
     } catch (err) {
       setError("Error de red o servidor");
     }
@@ -45,7 +46,7 @@ function Login() {
       <div className="form-panel">
         {/* Branding */}
         <div className="form-brand">
-          <img className="form-brand-logo" src="/src/assets/images/logo-negro.png" alt="Logo Iglesia Remanente Cali" />
+          <img className="form-brand-logo" src={logoNegro} alt="Logo Iglesia Remanente Cali" />
           <div className="form-brand-name">
             Iglesia Remanente
             <small>Cali</small>

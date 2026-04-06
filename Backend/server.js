@@ -13,13 +13,23 @@ const dbPath = path.join(__dirname, 'db', 'personas.db');
 const db = new sqlite3.Database(dbPath);
 
 // Middlewares
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ 
+  origin: ['http://localhost:5173', 'http://localhost:80', 'http://localhost'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
 app.use(session({
   secret: 'remanente-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, httpOnly: true }
+  cookie: { 
+    secure: false, 
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60 * 24 // 24 horas
+  }
 }));
 
 // Inicializar la base de datos si no existe
@@ -54,11 +64,27 @@ app.get('/api/auth', (req, res) => {
   }
 });
 
+// Endpoint de logout
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) return res.status(500).json({ error: 'Error al cerrar sesión' });
+    res.json({ ok: true });
+  });
+});
+
 // Middleware de protección
 function requireAuth(req, res, next) {
   if (req.session.user) return next();
   res.status(401).json({ error: 'No autorizado' });
 }
+
+// Obtener todas las personas registradas
+app.get('/api/personas', requireAuth, (req, res) => {
+  db.all('SELECT id, nombre, apellido, rol FROM personas', (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Error en el servidor' });
+    res.json(rows || []);
+  });
+});
 
 // Endpoint protegido de ejemplo
 app.get('/api/solo-admin', requireAuth, (req, res) => {

@@ -10,6 +10,7 @@ import Donaciones from "./pages/Donaciones";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
+import PersonasRegistradas from "./pages/PersonasRegistradas";
 import RequireAuth from "./components/RequireAuth";
 
 function ScrollToTop() {
@@ -96,9 +97,15 @@ function App() {
         {/* Login sin Layout, no Navbar/Footer */}
         <Route path="/login" element={<Login />} />
         {/* Registro protegido, solo para usuarios autenticados */}
-        <Route path="/registro" element={
+        <Route path="/admin/registro" element={
           <RequireAuth>
             <Registro />
+          </RequireAuth>
+        } />
+        {/* Personas registradas - Panel de administración protegido */}
+        <Route path="/admin/personas" element={
+          <RequireAuth>
+            <PersonasRegistradas />
           </RequireAuth>
         } />
       </Routes>
