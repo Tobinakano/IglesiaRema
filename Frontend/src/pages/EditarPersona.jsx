@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { logout } from "../utils/auth";
 import "../styles/admin.css";
 
 function EditarPersona() {
@@ -54,6 +55,15 @@ function EditarPersona() {
     };
     cargarDatos();
   }, [id]);
+
+  const handleLogout = async () => {
+    const ok = await logout();
+    if (ok) {
+      window.location.href = '/login';
+    } else {
+      alert('Error al cerrar sesión');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -187,7 +197,7 @@ function EditarPersona() {
                     <span>Configuración</span>
                   </a>
                   <div style={{ height: '1px', background: '#e4e6ea', margin: '8px 0' }}></div>
-                  <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#ef4444', textDecoration: 'none', fontSize: '14px' }} onMouseEnter={(e) => e.target.parentElement.style.background = '#fee2e2'} onMouseLeave={(e) => e.target.parentElement.style.background = 'transparent'}>
+                  <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#ef4444', textDecoration: 'none', fontSize: '14px', cursor: 'pointer' }} onMouseEnter={(e) => e.target.parentElement.style.background = '#fee2e2'} onMouseLeave={(e) => e.target.parentElement.style.background = 'transparent'}>
                     <i className="fas fa-arrow-right-from-bracket" style={{ width: '20px', textAlign: 'center' }}></i>
                     <span>Cerrar Sesión</span>
                   </a>
