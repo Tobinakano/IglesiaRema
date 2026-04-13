@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "../styles/admin.css";
 
-function Registro() {
+function EditarPersona() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [usuarioActual, setUsuarioActual] = useState(null);
@@ -18,27 +20,40 @@ function Registro() {
     rol: "Administrador"
   });
 
-  // Obtener usuario autenticado
+  // Cargar datos de la persona al montar el componente
   useEffect(() => {
-    const obtenerUsuario = async () => {
+    const cargarDatos = async () => {
       try {
-        const res = await fetch("/api/auth", {
+        // Obtener usuario autenticado
+        const authRes = await fetch("/api/auth", {
           credentials: "include",
         });
-        if (res.ok) {
-          const data = await res.json();
-          setUsuarioActual(data.user);
+        if (authRes.ok) {
+          const authData = await authRes.json();
+          setUsuarioActual(authData.user);
         }
+
+        // Obtener datos de la persona a editar
+        const res = await fetch(`/api/personas/${id}`, {
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Error al cargar los datos");
+        const data = await res.json();
+        setFormData({
+          nombre: data.nombre,
+          apellido: data.apellido,
+          usuario: data.usuario,
+          rol: data.rol
+        });
       } catch (err) {
+        setError("Error al cargar los datos de la persona");
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
-    obtenerUsuario();
-  }, []);
-
-  const togglePassword = () => {
-    setPasswordVisible(!passwordVisible);
-  };
+    cargarDatos();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,42 +64,46 @@ function Registro() {
     e.preventDefault();
     setError("");
     setSuccess("");
-    setLoading(true);
+    setSaving(true);
 
     // Validar que los campos no estén vacíos
-    if (!formData.nombre || !formData.apellido || !formData.usuario || !formData.contrasena) {
+    if (!formData.nombre || !formData.apellido || !formData.rol) {
       setError("Todos los campos son requeridos");
-      setLoading(false);
+      setSaving(false);
       return;
     }
 
-    // Enviar al backend
-    fetch("/api/personas", {
-      method: "POST",
+    // Preparar datos a enviar
+    const dataToSend = {
+      nombre: formData.nombre,
+      apellido: formData.apellido,
+      rol: formData.rol
+    };
+
+    // Solo enviar contraseña si no está vacía
+    if (formData.contrasena) {
+      dataToSend.contrasena = formData.contrasena;
+    }
+
+    // Enviar actualización al backend
+    fetch(`/api/personas/${id}`, {
+      method: "PUT",
       headers: {
         "Content-Type": "application/json"
       },
       credentials: "include",
-      body: JSON.stringify(formData)
+      body: JSON.stringify(dataToSend)
     })
       .then(res => res.json())
       .then(data => {
         if (data.ok) {
-          setSuccess("Usuario registrado exitosamente");
-          // Limpiar formulario
-          setFormData({
-            nombre: "",
-            apellido: "",
-            usuario: "",
-            contrasena: "",
-            rol: "Administrador"
-          });
+          setSuccess("Usuario actualizado exitosamente");
           // Redirigir después de 1.5 segundos
           setTimeout(() => {
             navigate("/admin/personas");
           }, 1500);
         } else {
-          setError(data.error || "Error al registrar el usuario");
+          setError(data.error || "Error al actualizar el usuario");
         }
       })
       .catch(err => {
@@ -92,9 +111,21 @@ function Registro() {
         console.error(err);
       })
       .finally(() => {
-        setLoading(false);
+        setSaving(false);
       });
   };
+
+  if (loading) {
+    return (
+      <div className="admin-container">
+        <main className="main">
+          <div className="content" style={{ textAlign: 'center', padding: '40px' }}>
+            Cargando datos...
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-container">
@@ -118,7 +149,7 @@ function Registro() {
               <line x1="19" y1="8" x2="19" y2="14" />
               <line x1="22" y1="11" x2="16" y2="11" />
             </svg>
-            Registrar Persona
+            Editar Persona
           </a>
         </nav>
 
@@ -137,7 +168,7 @@ function Registro() {
           <nav className="breadcrumb">
             <span>Inicio</span>
             <span className="sep">›</span>
-            <span className="current">Registrar Persona</span>
+            <span className="current">Editar Persona</span>
           </nav>
           <div className="topbar-right" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowUserMenu(!showUserMenu)}>
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#1a1a1a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '16px' }}>
@@ -168,8 +199,8 @@ function Registro() {
 
         <div className="content">
           <div className="page-header">
-            <h1>Registrar Persona</h1>
-            <p>Completa los datos para registrar a una nueva persona</p>
+            <h1>Editar Persona</h1>
+            <p>Modifica los datos de la persona registrada</p>
           </div>
 
           {error && <div style={{ color: '#e74c3c', padding: '12px', marginBottom: '20px', backgroundColor: '#fadbd8', borderRadius: '4px', fontSize: '14px', border: '1px solid #e74c3c' }}>{error}</div>}
@@ -206,36 +237,36 @@ function Registro() {
                 </div>
               </div>
 
-              {/* Credenciales */}
+              {/* Información de usuario (solo lectura) */}
               <div className="form-section">
-                <p className="form-section-title">Credenciales de acceso</p>
+                <p className="form-section-title">Información de usuario</p>
                 <div className="form-grid">
                   <div className="field-group">
                     <label>Usuario</label>
                     <input 
                       type="text" 
                       name="usuario"
-                      placeholder="Ej: maria.gonzalez"
                       value={formData.usuario}
-                      onChange={handleChange}
-                      required 
+                      disabled
+                      style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
                     />
+                    <p style={{ fontSize: '12px', color: '#777', marginTop: '5px' }}>No se puede cambiar el usuario</p>
                   </div>
+
                   <div className="field-group">
-                    <label>Contraseña</label>
+                    <label>Contraseña (opcional)</label>
                     <div className="password-wrapper">
                       <input
                         type={passwordVisible ? "text" : "password"}
                         name="contrasena"
-                        placeholder="••••••••"
+                        placeholder="Dejar vacío para mantener la contraseña actual"
                         className="password-input"
                         value={formData.contrasena}
                         onChange={handleChange}
-                        required
                       />
                       <button
                         type="button"
-                        onClick={togglePassword}
+                        onClick={() => setPasswordVisible(!passwordVisible)}
                         className="toggle-password-btn"
                       >
                         {passwordVisible ? (
@@ -278,15 +309,15 @@ function Registro() {
                     type="button" 
                     className="btn-cancel"
                     onClick={() => navigate("/admin/personas")}
-                    disabled={loading}
+                    disabled={saving}
                   >
                     Cancelar
                   </button>
-                  <button type="submit" className="btn-submit" disabled={loading}>
+                  <button type="submit" className="btn-submit" disabled={saving}>
                     <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    {loading ? "Registrando..." : "Registrar"}
+                    {saving ? "Guardando..." : "Guardar Cambios"}
                   </button>
                 </div>
               </div>
@@ -298,4 +329,4 @@ function Registro() {
   );
 }
 
-export default Registro;
+export default EditarPersona;

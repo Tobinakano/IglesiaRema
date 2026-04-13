@@ -390,6 +390,11 @@ tbody td {
   color: #8a6a1a;
 }
 
+.badge-asistencias {
+  background: rgba(100,180,230,0.2);
+  color: #0066cc;
+}
+
 .badge-registrador {
   background: rgba(100,150,200,0.15);
   color: #2c5aa0;

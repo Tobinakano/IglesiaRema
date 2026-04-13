@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import ConfirmModal from "../components/ConfirmModal";
+import Alert from "../components/Alert";
 import "../styles/admin.css";
 
 function PersonasRegistradas() {
@@ -7,12 +9,28 @@ function PersonasRegistradas() {
   const [personas, setPersonas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [personaToDelete, setPersonaToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [usuarioActual, setUsuarioActual] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
-    // Cargar personas del backend
-    const cargarPersonas = async () => {
+    // Cargar usuario actual y personas del backend
+    const cargarDatos = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/personas", {
+        // Obtener usuario autenticado
+        const authRes = await fetch("/api/auth", {
+          credentials: "include",
+        });
+        if (authRes.ok) {
+          const authData = await authRes.json();
+          setUsuarioActual(authData.user);
+        }
+
+        // Cargar personas
+        const res = await fetch("/api/personas", {
           credentials: "include",
         });
         if (!res.ok) throw new Error("Error al cargar personas");
@@ -25,20 +43,93 @@ function PersonasRegistradas() {
         setLoading(false);
       }
     };
-    cargarPersonas();
+    cargarDatos();
   }, []);
 
   const handleEditar = (id) => {
-    alert(`Editar persona con ID: ${id}`);
+    // Obtener la persona que se intenta editar
+    const persona = personas.find(p => p.id === id);
+    
+    // Verificar si es el usuario autenticado
+    if (usuarioActual && usuarioActual.id === id) {
+      addAlert({
+        type: "warning",
+        title: "No permitido",
+        message: `No puedes editar tu propio usuario (${persona.nombre} ${persona.apellido}).`
+      });
+      return;
+    }
+    
+    navigate(`/admin/editar/${id}`);
   };
 
   const handleEliminar = (id) => {
-    setPersonas(personas.filter(p => p.id !== id));
+    // Obtener la persona que se intenta eliminar
+    const persona = personas.find(p => p.id === id);
+    
+    // Verificar si es el usuario autenticado
+    if (usuarioActual && usuarioActual.id === id) {
+      addAlert({
+        type: "danger",
+        title: "No permitido",
+        message: `No puedes eliminar tu propio usuario (${persona.nombre} ${persona.apellido}).`
+      });
+      return;
+    }
+    
+    setPersonaToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const addAlert = (alertConfig) => {
+    const id = Date.now();
+    setAlerts(prev => [...prev, { id, ...alertConfig }]);
+  };
+
+  const removeAlert = (id) => {
+    setAlerts(prev => prev.filter(alert => alert.id !== id));
+  };
+
+  const confirmDelete = () => {
+    setDeleting(true);
+    
+    fetch(`/api/personas/${personaToDelete}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include"
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok) {
+          setPersonas(personas.filter(p => p.id !== personaToDelete));
+          setShowDeleteModal(false);
+          setPersonaToDelete(null);
+        } else {
+          setError(data.error || "Error al eliminar el usuario");
+          setShowDeleteModal(false);
+        }
+      })
+      .catch(err => {
+        setError("Error de conexión al eliminar el usuario");
+        console.error(err);
+        setShowDeleteModal(false);
+      })
+      .finally(() => {
+        setDeleting(false);
+      });
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setPersonaToDelete(null);
   };
 
   const getRolBadgeClass = (rol) => {
     switch (rol) {
       case "Administrador": return "badge-admin";
+      case "Asistencias": return "badge-asistencias";
       case "Registrador": return "badge-registrador";
       case "Lector": return "badge-lector";
       default: return "";
@@ -50,9 +141,7 @@ function PersonasRegistradas() {
       {/* SIDEBAR */}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div className="brand-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          </div>
+          <img src="/favicon.png" alt="Logo Iglesia Remanente Cali" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
           <div className="brand-text">
             <div className="name">Remanente</div>
             <div className="city">Cali</div>
@@ -69,10 +158,10 @@ function PersonasRegistradas() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="avatar-sm">A</div>
+          <div className="avatar-sm">{usuarioActual?.nombre?.[0].toUpperCase() || 'A'}</div>
           <div className="footer-info">
-            <div className="label">Administrador</div>
-            <div className="sub">Administrador · Remanente</div>
+            <div className="label">{usuarioActual?.nombre || 'Nombre'}</div>
+            <div className="sub">{usuarioActual?.rol || 'Rol'} · Remanente</div>
           </div>
         </div>
       </aside>
@@ -84,7 +173,31 @@ function PersonasRegistradas() {
           <span className="sep">›</span>
           <span className="current">Personas registradas</span>
         </nav>
-        <div className="topbar-right">A</div>
+        <div className="topbar-right" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowUserMenu(!showUserMenu)}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#1a1a1a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '16px' }}>
+            {usuarioActual?.nombre ? usuarioActual.nombre[0].toUpperCase() : 'A'}
+          </div>
+          
+          {showUserMenu && (
+            <div style={{ position: 'absolute', top: '50px', right: '0', background: '#fff', border: '1px solid #e4e6ea', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', minWidth: '200px', zIndex: 1000 }}>
+              <div style={{ padding: '12px 0' }}>
+                <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }} onMouseEnter={(e) => e.target.parentElement.style.background = '#f4f5f7'} onMouseLeave={(e) => e.target.parentElement.style.background = 'transparent'}>
+                  <i className="fas fa-user" style={{ width: '20px', textAlign: 'center' }}></i>
+                  <span>Mi Perfil</span>
+                </a>
+                <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }} onMouseEnter={(e) => e.target.parentElement.style.background = '#f4f5f7'} onMouseLeave={(e) => e.target.parentElement.style.background = 'transparent'}>
+                  <i className="fas fa-gear" style={{ width: '20px', textAlign: 'center' }}></i>
+                  <span>Configuración</span>
+                </a>
+                <div style={{ height: '1px', background: '#e4e6ea', margin: '8px 0' }}></div>
+                <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#ef4444', textDecoration: 'none', fontSize: '14px' }} onMouseEnter={(e) => e.target.parentElement.style.background = '#fee2e2'} onMouseLeave={(e) => e.target.parentElement.style.background = 'transparent'}>
+                  <i className="fas fa-arrow-right-from-bracket" style={{ width: '20px', textAlign: 'center' }}></i>
+                  <span>Cerrar Sesión</span>
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* MAIN */}
@@ -153,6 +266,32 @@ function PersonasRegistradas() {
 
         </div>
       </main>
+
+      <ConfirmModal 
+        isOpen={showDeleteModal}
+        title="Confirmar eliminación"
+        message="¿Estás seguro/a de borrar este usuario?"
+        confirmText={deleting ? "Eliminando..." : "Eliminar"}
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        isLoading={deleting}
+      />
+
+      {/* Contenedor de Alertas */}
+      <div className="alerts-container">
+        {alerts.map(alert => (
+          <Alert
+            key={alert.id}
+            type={alert.type}
+            title={alert.title}
+            message={alert.message}
+            onClose={() => removeAlert(alert.id)}
+            autoClose={true}
+          />
+        ))}
+      </div>
     </div>
   );
 }

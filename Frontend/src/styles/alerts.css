@@ -1,0 +1,157 @@
+/* Alert Styles - Similar a Bootstrap */
+
+.alert {
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: slideDown 0.3s ease-out;
+  font-family: 'Outfit', sans-serif;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.alert-close:hover {
+  opacity: 1;
+}
+
+.alert-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Alert Primaria - Azul */
+.alert-primary {
+  background-color: #cce5ff;
+  border-color: #004085;
+  color: #004085;
+}
+
+.alert-primary .alert-close {
+  color: #004085;
+}
+
+/* Alert Secundaria - Gris */
+.alert-secondary {
+  background-color: #e2e3e5;
+  border-color: #383d41;
+  color: #383d41;
+}
+
+.alert-secondary .alert-close {
+  color: #383d41;
+}
+
+/* Alert Éxito - Verde */
+.alert-success {
+  background-color: #d4edda;
+  border-color: #155724;
+  color: #155724;
+}
+
+.alert-success .alert-close {
+  color: #155724;
+}
+
+/* Alert Peligro/Rojo - Para Eliminar */
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #721c24;
+  color: #721c24;
+}
+
+.alert-danger .alert-close {
+  color: #721c24;
+}
+
+/* Alert Advertencia/Amarillo - Para Editar */
+.alert-warning {
+  background-color: #fff3cd;
+  border-color: #856404;
+  color: #856404;
+}
+
+.alert-warning .alert-close {
+  color: #856404;
+}
+
+/* Alert Info - Azul Claro */
+.alert-info {
+  background-color: #d1ecf1;
+  border-color: #0c5460;
+  color: #0c5460;
+}
+
+.alert-info .alert-close {
+  color: #0c5460;
+}
+
+/* Alert Light - Gris Claro */
+.alert-light {
+  background-color: #f8f9fa;
+  border-color: #d6d8db;
+  color: #383d41;
+}
+
+.alert-light .alert-close {
+  color: #383d41;
+}
+
+/* Contenedor de alertas */
+.alerts-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .alerts-container {
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+}

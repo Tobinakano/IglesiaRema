@@ -22,21 +22,55 @@ function Login() {
     e.preventDefault();
     setError("");
     try {
-      const res = await fetch("http://localhost:4000/api/login", {
+      console.log("🔐 Intentando login con:", usuario);
+      
+      // Usar /api en lugar de localhost:4000 para que funcione en Docker
+      const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ usuario, contrasena })
       });
+      
+      console.log("📡 Respuesta del login:", res.status);
+      
       if (!res.ok) {
         const data = await res.json();
+        console.error("❌ Error de login:", data);
         setError(data.error || "Error de autenticación");
         return;
       }
-      // Login exitoso
-      navigate("/admin/personas");
+      
+      const loginData = await res.json();
+      console.log("✅ Login exitoso:", loginData);
+      
+      // Obtener rol del usuario
+      console.log("🔍 Obteniendo sesión...");
+      const sessionRes = await fetch("/api/session", {
+        credentials: "include",
+      });
+      
+      console.log("📡 Respuesta de sesión:", sessionRes.status);
+      
+      if (sessionRes.ok) {
+        const sessionData = await sessionRes.json();
+        console.log("📋 Datos de sesión:", sessionData);
+        
+        // Redirigir según el rol
+        if (sessionData.rol === "Asistencias") {
+          console.log("➡️ Redirigiendo a /asistencia/listado");
+          navigate("/asistencia/listado");
+        } else {
+          console.log("➡️ Redirigiendo a /admin/personas");
+          navigate("/admin/personas");
+        }
+      } else {
+        console.warn("⚠️ No se pudo obtener la sesión, redirigiendo a /admin/personas");
+        navigate("/admin/personas");
+      }
     } catch (err) {
-      setError("Error de red o servidor");
+      console.error("💥 Error en login:", err);
+      setError("Error de red o servidor: " + err.message);
     }
   };
 
