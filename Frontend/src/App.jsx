@@ -14,6 +14,7 @@ import EditarPersona from "./pages/EditarPersona";
 import PersonasRegistradas from "./pages/PersonasRegistradas";
 import Asistencias from "./pages/Asistencias";
 import ListadoAsistencias from "./pages/ListadoAsistencias";
+import AdminFlayers from "./pages/AdminFlayers";
 import RequireAuth from "./components/RequireAuth";
 
 function ScrollToTop() {
@@ -127,6 +128,12 @@ function App() {
         <Route path="/asistencia/registros" element={
           <RequireAuth>
             <ListadoAsistencias />
+          </RequireAuth>
+        } />
+        {/* Gestor de Flayers - Panel de administración protegido */}
+        <Route path="/admin/flayers" element={
+          <RequireAuth>
+            <AdminFlayers />
           </RequireAuth>
         } />
       </Routes>
