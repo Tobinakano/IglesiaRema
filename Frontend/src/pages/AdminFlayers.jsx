@@ -166,6 +166,7 @@ function AdminFlayers() {
 
     setFlayers([...flayers, newFlayer]);
     handleCerrarModal();
+    alert("✓ Flayer guardado exitosamente");
   };
 
   const handleRemoveImage = () => {
