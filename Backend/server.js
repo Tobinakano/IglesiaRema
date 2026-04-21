@@ -4,6 +4,8 @@ const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const session = require('express-session');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 
 const app = express();
 const PORT = 4000;
@@ -33,12 +35,70 @@ app.use(session({
 }));
 
 // Inicializar la base de datos si no existe
-const fs = require('fs');
 const initSql = path.join(__dirname, 'db', 'init.sql');
-if (!fs.existsSync(dbPath)) {
+const initializeDB = () => {
+  console.log('📦 Verificando base de datos...');
   const initScript = fs.readFileSync(initSql, 'utf8');
-  db.exec(initScript);
+  
+  // Usar exec para ejecutar todo el script
+  try {
+    db.exec(initScript);
+    console.log('✅ BD inicializada correctamente');
+  } catch (err) {
+    console.error('❌ Error inicializando BD:', err);
+  }
+};
+
+// Verificar si la tabla personas existe y tiene datos
+db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='personas'", (err, row) => {
+  if (err) {
+    console.error('Error verificando BD:', err);
+  } else if (!row) {
+    console.log('Tabla personas no existe, inicializando...');
+    initializeDB();
+  } else {
+    // Tabla existe, verificar si tiene datos
+    db.get('SELECT COUNT(*) as count FROM personas', (err, row) => {
+      if (err || row.count === 0) {
+        console.log('Tabla personas vacía, reinicializando...');
+        initializeDB();
+      }
+    });
+  }
+});
+
+// Configurar carpeta de uploads para flayers
+const uploadsDir = path.join(__dirname, 'uploads', 'flayers');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+// Configurar multer para carga de imágenes
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos de imagen'));
+    }
+  }
+});
+
+// Servir archivos estáticos de uploads
+app.use('/uploads/flayers', express.static(uploadsDir));
 
 // Endpoint de login
 app.post('/api/login', (req, res) => {
@@ -192,7 +252,7 @@ app.get('/api/session', (req, res) => {
 
 // Endpoint para obtener el listado de asistencia
 app.get('/api/asistencia', requireAuth, (req, res) => {
-  db.all('SELECT id, nombre_completo, numero, sexo, grupo FROM asistencia ORDER BY grupo, nombre_completo', (err, rows) => {
+  db.all('SELECT id, nombre_completo, numero, sexo, grupo FROM asistencia ORDER BY grupo, LOWER(nombre_completo)', (err, rows) => {
     if (err) return res.status(500).json({ error: 'Error en el servidor' });
     res.json(rows || []);
   });
@@ -331,6 +391,187 @@ app.delete('/api/asistencia/:id', requireAuth, (req, res) => {
     }
     res.json({ ok: true });
   });
+});
+
+// ═══════════════════════════════════════════
+// ENDPOINTS PARA FLAYERS
+// ═══════════════════════════════════════════
+
+// Obtener todos los flayers ordenados
+app.get('/api/flayers', (req, res) => {
+  db.all(
+    'SELECT id, titulo, imagen_path, orden FROM flayers ORDER BY orden ASC, id ASC',
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: 'Error en el servidor' });
+      // Convertir rutas de imágenes a URLs públicas
+      const flayers = (rows || []).map(f => ({
+        id: f.id,
+        titulo: f.titulo,
+        orden: f.orden,
+        imagen: `/uploads/flayers/${f.imagen_path}`
+      }));
+      res.json(flayers);
+    }
+  );
+});
+
+// Crear nuevo flayer con imagen
+// Helper para manejar errores de multer  
+const handleMulterError = (handler) => (req, res, next) => {
+  handler(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      console.error('❌ Error Multer:', err.message);
+      return res.status(400).json({ error: 'Error al subir archivo: ' + err.message });
+    } else if (err) {
+      console.error('❌ Error:', err.message);
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+};
+
+app.post('/api/flayers', handleMulterError(upload.single('imagen')), (req, res) => {
+  console.log('📥 POST /api/flayers - File:', req.file?.filename, 'Título:', req.body.titulo);
+  
+  const { titulo } = req.body;
+
+  if (!titulo || !req.file) {
+    console.log('❌ Validación fallida - Título:', !!titulo, 'Archivo:', !!req.file);
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
+    return res.status(400).json({ error: 'Título e imagen son requeridos' });
+  }
+
+  // Obtener el orden más alto actual
+  db.get('SELECT MAX(orden) as maxOrden FROM flayers', (err, row) => {
+    if (err) {
+      console.error('❌ Error obteniendo orden:', err);
+      fs.unlinkSync(req.file.path);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+
+    const nuevoOrden = (row.maxOrden || 0) + 1;
+    console.log('📝 Insertando flayer con orden:', nuevoOrden);
+
+    db.run(
+      'INSERT INTO flayers (titulo, imagen_path, orden) VALUES (?, ?, ?)',
+      [titulo, req.file.filename, nuevoOrden],
+      function(err) {
+        if (err) {
+          console.error('❌ Error insertando en BD:', err);
+          fs.unlinkSync(req.file.path);
+          return res.status(500).json({ error: 'Error al crear el flayer' });
+        }
+        console.log('✅ Flayer guardado con ID:', this.lastID);
+        res.json({
+          ok: true,
+          id: this.lastID,
+          titulo,
+          imagen: `/uploads/flayers/${req.file.filename}`,
+          orden: nuevoOrden
+        });
+      }
+    );
+  });
+});
+
+// Eliminar flayer
+app.delete('/api/flayers/:id', (req, res) => {
+  const { id } = req.params;
+
+  db.get('SELECT imagen_path FROM flayers WHERE id = ?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: 'Error en el servidor' });
+    if (!row) return res.status(404).json({ error: 'Flayer no encontrado' });
+
+    // Eliminar archivo de imagen
+    if (row.imagen_path && fs.existsSync(row.imagen_path)) {
+      fs.unlinkSync(row.imagen_path);
+    }
+
+    // Eliminar registro de BD
+    db.run('DELETE FROM flayers WHERE id = ?', [id], function(err) {
+      if (err) return res.status(500).json({ error: 'Error al eliminar el flayer' });
+      res.json({ ok: true });
+    });
+  });
+});
+
+// Cambiar orden de flayers (mover arriba/abajo)
+app.put('/api/flayers/:id/reorder', (req, res) => {
+  const { id } = req.params;
+  const { direccion } = req.body; // 'arriba' o 'abajo'
+
+  if (!direccion || !['arriba', 'abajo'].includes(direccion)) {
+    return res.status(400).json({ error: 'Dirección debe ser "arriba" o "abajo"' });
+  }
+
+  db.get('SELECT orden FROM flayers WHERE id = ?', [id], (err, flayer) => {
+    if (err) return res.status(500).json({ error: 'Error en el servidor' });
+    if (!flayer) return res.status(404).json({ error: 'Flayer no encontrado' });
+
+    const ordenActual = flayer.orden;
+    let queryOrden;
+
+    if (direccion === 'arriba') {
+      // Buscar flayer con orden inmediatamente anterior (más bajo)
+      queryOrden = 'SELECT id, orden FROM flayers WHERE orden < ? ORDER BY orden DESC LIMIT 1';
+    } else {
+      // Buscar flayer con orden inmediatamente siguiente (más alto)
+      queryOrden = 'SELECT id, orden FROM flayers WHERE orden > ? ORDER BY orden ASC LIMIT 1';
+    }
+
+    db.get(queryOrden, [ordenActual], (err, otroFlayer) => {
+      if (err) return res.status(500).json({ error: 'Error en el servidor' });
+      if (!otroFlayer) {
+        return res.status(400).json({ error: 'No hay flayer donde mover' });
+      }
+
+      const ordenOtro = otroFlayer.orden;
+      const idOtro = otroFlayer.id;
+
+      // Usar valor temporal para evitar conflictos de orden duplicado
+      const tempOrden = -999;
+
+      // 1. Actualizar flayer actual a valor temporal
+      db.run('UPDATE flayers SET orden = ? WHERE id = ?', [tempOrden, id], (err) => {
+        if (err) return res.status(500).json({ error: 'Error en paso 1 del reordenamiento' });
+
+        // 2. Actualizar el otro flayer al orden del flayer actual
+        db.run('UPDATE flayers SET orden = ? WHERE id = ?', [ordenActual, idOtro], (err) => {
+          if (err) return res.status(500).json({ error: 'Error en paso 2 del reordenamiento' });
+
+          // 3. Actualizar flayer actual al orden del otro flayer
+          db.run('UPDATE flayers SET orden = ? WHERE id = ?', [ordenOtro, id], (err) => {
+            if (err) return res.status(500).json({ error: 'Error en paso 3 del reordenamiento' });
+            res.json({ ok: true });
+          });
+        });
+      });
+    });
+  });
+});
+
+// Actualizar información de flayer
+app.put('/api/flayers/:id', (req, res) => {
+  const { id } = req.params;
+  const { titulo } = req.body;
+
+  if (!titulo) {
+    return res.status(400).json({ error: 'Título es requerido' });
+  }
+
+  db.run(
+    'UPDATE flayers SET titulo = ? WHERE id = ?',
+    [titulo, id],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Error al actualizar el flayer' });
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Flayer no encontrado' });
+      }
+      res.json({ ok: true });
+    }
+  );
 });
 
 app.listen(PORT, () => {

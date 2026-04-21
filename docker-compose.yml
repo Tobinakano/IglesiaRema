@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./Backend/db:/app/db
+      - uploads_volume:/app/uploads
     ports:
       - "4000:4000"
     restart: unless-stopped
@@ -19,3 +20,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  uploads_volume:

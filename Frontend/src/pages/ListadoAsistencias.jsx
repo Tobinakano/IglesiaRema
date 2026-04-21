@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { logout } from '../utils/auth';
 import '../styles/asistencias.css';
+import jsPDF from 'jspdf';
 
 const COLORES = {
   'Niños': '#3b82f6',
@@ -80,6 +81,86 @@ export default function ListadoAsistencias() {
     }
   };
 
+  const generarPDF = (fecha, personas) => {
+    const doc = new jsPDF();
+    const fechaFormato = new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    
+    // Título
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text('Iglesia Cristiana Remanente', 105, 20, { align: 'center' });
+    
+    // Subtítulo
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Registro de Asistencias`, 105, 30, { align: 'center' });
+    
+    // Fecha
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Fecha: ${fechaFormato}`, 20, 45);
+    
+    // Total de asistentes
+    doc.setFont(undefined, 'bold');
+    doc.text(`Total de personas: ${personas.length}`, 20, 55);
+    
+    // Línea separadora
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 60, 190, 60);
+    
+    // Encabezados de tabla
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(10);
+    const columnWidths = [30, 60, 30, 30, 20];
+    const headers = ['#', 'Nombre', 'Número', 'Sexo', 'Grupo'];
+    let xPos = 20;
+    headers.forEach((header, i) => {
+      doc.text(header, xPos, 70);
+      xPos += columnWidths[i];
+    });
+    
+    // Línea separadora
+    doc.line(20, 72, 190, 72);
+    
+    // Datos
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    let yPos = 80;
+    
+    personas.forEach((persona, index) => {
+      xPos = 20;
+      doc.text(String(index + 1), xPos, yPos);
+      xPos += columnWidths[0];
+      
+      doc.text(persona.nombre_completo.substring(0, 35), xPos, yPos);
+      xPos += columnWidths[1];
+      
+      doc.text(String(persona.numero || '-'), xPos, yPos);
+      xPos += columnWidths[2];
+      
+      doc.text(persona.sexo || '-', xPos, yPos);
+      xPos += columnWidths[3];
+      
+      doc.text(persona.grupo || '-', xPos, yPos);
+      
+      yPos += 7;
+      
+      // Si llegamos al final de la página, crear una nueva
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+    });
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 105, 285, { align: 'center' });
+    
+    // Descargar
+    doc.save(`Asistencias_${fecha}.pdf`);
+  };
+
   const handleBorrar = (fecha, registroId, nombrePersona) => {
     setRegistroBorrar({ id: registroId, fecha, nombre: nombrePersona });
     setModalBorrar(true);
@@ -89,18 +170,22 @@ export default function ListadoAsistencias() {
     if (!registroBorrar) return;
 
     try {
-      const res = await fetch(`/api/asistencia/registros/${registroBorrar.id}`, {
+      const res = await fetch(`/api/asistencia/registros/${registroBorrar.fecha}`, {
         method: 'DELETE',
         credentials: 'include'
       });
 
       if (res.ok) {
+        // Remover la fecha de la lista principal
+        setRegistros(prev => prev.filter(r => r.fecha !== registroBorrar.fecha));
+        
+        // Cerrar detalles si estaba abierto
+        if (detalles && detalles.fecha === registroBorrar.fecha) {
+          setDetalles(null);
+        }
+        
         setModalBorrar(false);
         setRegistroBorrar(null);
-        // Recargar detalles de la fecha
-        if (detalles) {
-          await verListado(detalles.fecha);
-        }
       }
     } catch (error) {
       console.error('Error al borrar:', error);
@@ -122,15 +207,11 @@ export default function ListadoAsistencias() {
         <span className="sidebar-label">Menú</span>
         <nav className="sidebar-nav">
           <a href="/asistencia/listado" className="nav-item">
-            <svg viewBox="0 0 24 24">
-              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
+            <i className="fas fa-check-square"></i>
             Registrar Asistencias
           </a>
           <a href="/asistencia/registros" className="nav-item active">
-            <svg viewBox="0 0 24 24">
-              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
-            </svg>
+            <i className="fas fa-clipboard-list"></i>
             Listado de Registros
           </a>
         </nav>
@@ -188,13 +269,6 @@ export default function ListadoAsistencias() {
             <h1 className="page-title">Registros de Asistencias</h1>
             <p className="page-subtitle">Historial de asistencias registradas</p>
           </div>
-          {!detalles && (
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={cargarRegistros} style={{ padding: '10px 20px', background: '#c9a84c', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>
-                ↻ Recargar
-              </button>
-            </div>
-          )}
         </div>
 
         {!detalles ? (
@@ -219,7 +293,7 @@ export default function ListadoAsistencias() {
                     registros.map((registro) => (
                       <tr key={registro.fecha} style={{ borderBottom: '1px solid #f0f1f3' }}>
                         <td style={{ padding: '16px 20px', color: '#1a1a1a' }}>
-                          {new Date(registro.fecha).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          {new Date(registro.fecha + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </td>
                         <td style={{ padding: '16px 20px', textAlign: 'center', color: '#1a1a1a', fontWeight: '600' }}>
                           {registro.total}
@@ -232,19 +306,19 @@ export default function ListadoAsistencias() {
                             onMouseEnter={(e) => { e.target.style.background = '#e4e6ea'; e.target.style.borderColor = '#3b82f6'; }}
                             onMouseLeave={(e) => { e.target.style.background = '#f0f1f3'; e.target.style.borderColor = '#e4e6ea'; }}
                           >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '21px', height: '21px' }}>
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
-                            </svg>
+                            <i className="fas fa-eye" style={{ fontSize: '18px' }}></i>
                           </button>
                           <button
+                            onClick={() => {
+                              const personas = registros.find(r => r.fecha === registro.fecha)?.personas || [];
+                              generarPDF(registro.fecha, personas);
+                            }}
                             title="Imprimir"
                             style={{ background: '#f0f1f3', border: '1px solid #e4e6ea', cursor: 'pointer', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9098a3', width: '35px', height: '35px', borderRadius: '4px', transition: 'all 0.2s' }}
                             onMouseEnter={(e) => { e.target.style.background = '#e4e6ea'; }}
                             onMouseLeave={(e) => { e.target.style.background = '#f0f1f3'; }}
                           >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '21px', height: '21px' }}>
-                              <polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect>
-                            </svg>
+                            <i className="fas fa-print" style={{ fontSize: '18px' }}></i>
                           </button>
                           <button
                             onClick={() => handleBorrar(registro.fecha, registro.fecha, `Registro de ${registro.fecha}`)}
@@ -253,9 +327,7 @@ export default function ListadoAsistencias() {
                             onMouseEnter={(e) => { e.target.style.background = '#fee2e2'; e.target.style.borderColor = '#ef4444'; }}
                             onMouseLeave={(e) => { e.target.style.background = '#f0f1f3'; e.target.style.borderColor = '#e4e6ea'; }}
                           >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '21px', height: '21px' }}>
-                              <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
-                            </svg>
+                            <i className="fas fa-trash" style={{ fontSize: '18px' }}></i>
                           </button>
                         </td>
                       </tr>
@@ -279,7 +351,7 @@ export default function ListadoAsistencias() {
             <div style={{ background: '#fff', border: '1px solid #e4e6ea', borderRadius: '12px', overflow: 'hidden' }}>
               <div style={{ padding: '20px', borderBottom: '1px solid #e4e6ea', background: '#f4f5f7' }}>
                 <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#1a1a1a' }}>
-                  Asistencias registradas el {new Date(detalles.fecha).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  Asistencias registradas el {new Date(detalles.fecha + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </h2>
               </div>
 

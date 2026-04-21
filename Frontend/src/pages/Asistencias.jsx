@@ -20,7 +20,6 @@ export default function Asistencias() {
   const [nuevasPersonas, setNuevasPersonas] = useState({ 'Niños': '', 'Jóvenes': '', 'Adultos': '' });
   const [nuevosNumeros, setNuevosNumeros] = useState({ 'Niños': '', 'Jóvenes': '', 'Adultos': '' });
   const [nuevosSexos, setNuevosSexos] = useState({ 'Niños': '', 'Jóvenes': '', 'Adultos': '' });
-  const [busqueda, setBusqueda] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [modalBorrar, setModalBorrar] = useState(false);
   const [personaBorrar, setPersonaBorrar] = useState(null);
@@ -131,8 +130,15 @@ export default function Asistencias() {
       });
       if (res.ok) {
         const nueva = await res.json();
-        setPersonas(prev => [...prev, nueva]);
-        // Pre-marcar automáticamente
+        // Recargar la lista completa del backend (ya viene ordenada)
+        const resGet = await fetch('/api/asistencia', {
+          credentials: 'include'
+        });
+        if (resGet.ok) {
+          const personasActualizadas = await resGet.json();
+          setPersonas(personasActualizadas);
+        }
+        // Pre-marcar automáticamente la nueva persona
         setAsistencias(prev => ({ ...prev, [nueva.id]: true }));
         // Limpiar inputs
         setNuevasPersonas(prev => ({ ...prev, [grupo]: '' }));
@@ -197,8 +203,7 @@ export default function Asistencias() {
 
   const personasPorGrupo = GRUPOS.reduce((acc, grupo) => {
     acc[grupo] = personas
-      .filter(p => p.grupo === grupo)
-      .filter(p => p.nombre_completo.toLowerCase().includes(busqueda.toLowerCase()));
+      .filter(p => p.grupo === grupo);
     return acc;
   }, {});
 
@@ -215,15 +220,11 @@ export default function Asistencias() {
         <span className="sidebar-label">Menú</span>
         <nav className="sidebar-nav">
           <a href="/asistencia/listado" className="nav-item active">
-            <svg viewBox="0 0 24 24">
-              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
+            <i className="fas fa-check-square"></i>
             Registrar Asistencias
           </a>
           <a href="/asistencia/registros" className="nav-item">
-            <svg viewBox="0 0 24 24">
-              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
-            </svg>
+            <i className="fas fa-clipboard-list"></i>
             Listado de Registros
           </a>
         </nav>
@@ -286,9 +287,7 @@ export default function Asistencias() {
           {GRUPOS.map(grupo => (
             <div key={grupo} className="stat-card">
               <div className="stat-icon" style={{ background: `${COLORES[grupo]}20` }}>
-                <svg viewBox="0 0 24 24" style={{ stroke: COLORES[grupo] }}>
-                  <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
-                </svg>
+                <i className="fas fa-users" style={{ color: COLORES[grupo], fontSize: '20px' }}></i>
               </div>
               <div>
                 <div className="stat-value">{personasPorGrupo[grupo].length}</div>
@@ -296,15 +295,6 @@ export default function Asistencias() {
               </div>
             </div>
           ))}
-        </div>
-        <div style={{ marginBottom: '20px' }}>
-          <input
-            type="text"
-            placeholder="Buscar persona..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            style={{ padding: '10px 16px', border: '1px solid #e4e6ea', borderRadius: '8px', fontSize: '14px', width: '100%', maxWidth: '400px' }}
-          />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {GRUPOS.map(grupo => (

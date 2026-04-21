@@ -36,18 +36,14 @@ function Carousel() {
           onClick={() => goTo(current - 1)}
           aria-label="Anterior"
         >
-          <svg viewBox="0 0 24 24">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
+          <i className="fas fa-chevron-left"></i>
         </button>
         <button
           className="carousel-btn next"
           onClick={() => goTo(current + 1)}
           aria-label="Siguiente"
         >
-          <svg viewBox="0 0 24 24">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+          <i className="fas fa-chevron-right"></i>
         </button>
       </div>
 

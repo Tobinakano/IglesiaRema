@@ -28,10 +28,7 @@ function Equipos() {
           {/* Intercesión */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-hands-praying" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">Intercesión</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -40,10 +37,7 @@ function Equipos() {
           {/* CNXN */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-users" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">CNXN</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -52,10 +46,7 @@ function Equipos() {
           {/* RemaKids */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-child" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">RemaKids</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -64,10 +55,7 @@ function Equipos() {
           {/* Pastoral */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-heart" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">Pastoral</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -76,10 +64,7 @@ function Equipos() {
           {/* Alabanza */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-music" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">Alabanza</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -88,10 +73,7 @@ function Equipos() {
           {/* Servicio */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-handshake" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">Servicio</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -100,10 +82,7 @@ function Equipos() {
           {/* Evangelismo */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-bullhorn" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">Evangelismo</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -112,10 +91,7 @@ function Equipos() {
           {/* Creativo */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-palette" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">Creativo</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -124,10 +100,7 @@ function Equipos() {
           {/* Danza */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              </svg>
+              <i className="fas fa-person-dancing" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">Danza</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>

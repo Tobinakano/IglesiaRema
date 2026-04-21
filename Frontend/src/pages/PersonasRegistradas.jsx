@@ -162,11 +162,11 @@ function PersonasRegistradas() {
 
         <nav className="sidebar-nav">
           <a className="nav-item active" href="#">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            <i className="fas fa-users"></i>
             Personas registradas
           </a>
           <a className="nav-item" href="/admin/flayers">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2-3 3 4 5-7"/></svg>
+            <i className="fas fa-image"></i>
             Flayers
           </a>
         </nav>
@@ -229,7 +229,7 @@ function PersonasRegistradas() {
               <div className="table-card-header">
                 <span className="count"><span>{personas.length}</span> personas registradas</span>
                 <button className="btn-new" onClick={() => navigate("/admin/registro") }>
-                  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <i className="fas fa-plus"></i>
                   Nuevo Registro
                 </button>
               </div>
@@ -255,10 +255,10 @@ function PersonasRegistradas() {
                         <td>
                           <div className="actions">
                             <button className="btn-icon" title="Editar" onClick={() => handleEditar(persona.id)}>
-                              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              <i className="fas fa-edit"></i>
                             </button>
                             <button className="btn-icon danger" title="Eliminar" onClick={() => handleEliminar(persona.id)}>
-                              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                              <i className="fas fa-trash"></i>
                             </button>
                           </div>
                         </td>
@@ -267,7 +267,7 @@ function PersonasRegistradas() {
                   ) : (
                     <tr>
                       <td colSpan="4" className="empty-state">
-                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <i className="fas fa-user" style={{ fontSize: '48px' }}></i>
                         <p>No hay personas registradas</p>
                       </td>
                     </tr>

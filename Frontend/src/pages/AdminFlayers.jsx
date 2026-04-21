@@ -17,23 +17,26 @@ function AdminFlayers() {
   const [dragActive, setDragActive] = useState(false);
   const [usuarioActual, setUsuarioActual] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [flayerToDelete, setFlayerToDelete] = useState(null);
 
-  // Cargar flayers del localStorage al montar
+  // Cargar flayers del backend al montar
   useEffect(() => {
-    const flayersGuardados = localStorage.getItem('flayers');
-    if (flayersGuardados) {
+    const cargarFlayers = async () => {
       try {
-        setFlayers(JSON.parse(flayersGuardados));
+        const res = await fetch("/api/flayers", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const datos = await res.json();
+          setFlayers(datos);
+        }
       } catch (error) {
-        console.error("Error al cargar flayers del almacenamiento:", error);
+        console.error("Error al cargar flayers:", error);
       }
-    }
+    };
+    cargarFlayers();
   }, []);
-
-  // Guardar flayers en localStorage cada que cambien
-  useEffect(() => {
-    localStorage.setItem('flayers', JSON.stringify(flayers));
-  }, [flayers]);
 
   // Cargar usuario actual
   useEffect(() => {
@@ -66,30 +69,85 @@ function AdminFlayers() {
   };
 
   const handleEliminar = (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este flayer?")) {
-      setFlayers(flayers.filter(f => f.id !== id));
+    setFlayerToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!flayerToDelete) return;
+
+    try {
+      const res = await fetch(`/api/flayers/${flayerToDelete}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        setFlayers(flayers.filter(f => f.id !== flayerToDelete));
+      } else {
+        alert("Error al eliminar el flayer");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al eliminar el flayer");
+    } finally {
+      setShowDeleteConfirm(false);
+      setFlayerToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setFlayerToDelete(null);
   };
 
   const handleEditar = (id) => {
     alert("Funcionalidad de editar próximamente");
   };
 
-  const handleMoverArriba = (id) => {
-    const index = flayers.findIndex(f => f.id === id);
-    if (index > 0) {
-      const newFlayers = [...flayers];
-      [newFlayers[index], newFlayers[index - 1]] = [newFlayers[index - 1], newFlayers[index]];
-      setFlayers(newFlayers);
+  const handleMoverArriba = async (id) => {
+    try {
+      const res = await fetch(`/api/flayers/${id}/reorder`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ direccion: "arriba" }),
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        // Recargar flayers del backend
+        const resGet = await fetch("/api/flayers", { credentials: "include" });
+        if (resGet.ok) {
+          setFlayers(await resGet.json());
+        }
+      } else {
+        alert("No se puede mover más arriba");
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
 
-  const handleMoverAbajo = (id) => {
-    const index = flayers.findIndex(f => f.id === id);
-    if (index < flayers.length - 1) {
-      const newFlayers = [...flayers];
-      [newFlayers[index], newFlayers[index + 1]] = [newFlayers[index + 1], newFlayers[index]];
-      setFlayers(newFlayers);
+  const handleMoverAbajo = async (id) => {
+    try {
+      const res = await fetch(`/api/flayers/${id}/reorder`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ direccion: "abajo" }),
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        // Recargar flayers del backend
+        const resGet = await fetch("/api/flayers", { credentials: "include" });
+        if (resGet.ok) {
+          setFlayers(await resGet.json());
+        }
+      } else {
+        alert("No se puede mover más abajo");
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
 
@@ -152,21 +210,35 @@ function AdminFlayers() {
     }
   };
 
-  const handleGuardarFlayer = () => {
+  const handleGuardarFlayer = async () => {
     if (!formData.titulo.trim() || !formData.imagen) {
       alert("Por favor completa los campos requeridos");
       return;
     }
 
-    const newFlayer = {
-      id: Math.max(...flayers.map(f => f.id), 0) + 1,
-      titulo: formData.titulo,
-      imagen: previewImage || formData.imagen,
-    };
+    try {
+      // Crear FormData para enviar archivo
+      const formDataToSend = new FormData();
+      formDataToSend.append('titulo', formData.titulo);
+      formDataToSend.append('imagen', formData.imagen);
 
-    setFlayers([...flayers, newFlayer]);
-    handleCerrarModal();
-    alert("✓ Flayer guardado exitosamente");
+      const res = await fetch("/api/flayers", {
+        method: "POST",
+        body: formDataToSend,
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const nuevoFlayer = await res.json();
+        setFlayers([...flayers, nuevoFlayer]);
+        handleCerrarModal();
+      } else {
+        alert("Error al guardar el flayer");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al guardar el flayer");
+    }
   };
 
   const handleRemoveImage = () => {
@@ -190,11 +262,11 @@ function AdminFlayers() {
 
         <nav className="sidebar-nav">
           <a className="nav-item" href="/admin/personas">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            <i className="fas fa-users"></i>
             Personas registradas
           </a>
           <a className="nav-item active" href="/admin/flayers">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2-3 3 4 5-7"/></svg>
+            <i className="fas fa-image"></i>
             Flayers
           </a>
         </nav>
@@ -409,6 +481,35 @@ function AdminFlayers() {
               </div>
             </div>
           </div>
+            )}
+
+            {/* Modal de Confirmación Eliminar */}
+            {showDeleteConfirm && (
+              <div className="modal-overlay" onClick={handleCancelDelete}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h2 className="modal-title">Confirmar eliminación</h2>
+                    <button className="modal-close" onClick={handleCancelDelete}>×</button>
+                  </div>
+                  <div className="modal-body" style={{ textAlign: 'center', padding: '30px' }}>
+                    <p style={{ fontSize: '16px', margin: 0 }}>
+                      ¿Estás seguro de que deseas eliminar este flayer?
+                    </p>
+                  </div>
+                  <div className="modal-footer">
+                    <button className="btn-cancel" onClick={handleCancelDelete}>
+                      Cancelar
+                    </button>
+                    <button 
+                      className="btn-save" 
+                      onClick={handleConfirmDelete}
+                      style={{ backgroundColor: '#dc3545', borderColor: '#dc3545' }}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

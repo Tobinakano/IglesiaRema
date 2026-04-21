@@ -127,13 +127,15 @@
     position: relative;
     display: flex; align-items: center;
 }
-.field-input-wrap svg {
+.field-input-wrap svg,
+.field-input-wrap i {
     position: absolute; left: 14px;
     width: 16px; height: 16px;
-    stroke: #bbb; fill: none;
+    font-size: 16px;
+    stroke: #bbb; fill: none; color: #bbb;
     stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
     pointer-events: none;
-    transition: stroke .2s;
+    transition: stroke .2s, color .2s;
 }
 
 .field-input {

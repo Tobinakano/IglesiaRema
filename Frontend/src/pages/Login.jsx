@@ -98,10 +98,7 @@ function Login() {
             <div className="field-wrap">
               <label className="field-label">Usuario</label>
               <div className="field-input-wrap">
-                <svg viewBox="0 0 24 24">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
+                <i className="fas fa-user" style={{ fontSize: '18px', marginRight: '12px' }}></i>
                 <input
                   className="field-input"
                   type="text"
@@ -117,10 +114,7 @@ function Login() {
             <div className="field-wrap">
               <label className="field-label">Contraseña</label>
               <div className="field-input-wrap">
-                <svg viewBox="0 0 24 24">
-                  <rect x="3" y="11" width="18" height="11" rx="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
+                <i className="fas fa-lock" style={{ fontSize: '18px', marginRight: '12px' }}></i>
                 <input
                   className="field-input"
                   type="password"
@@ -140,10 +134,7 @@ function Login() {
           {/* Botón */}
           <button className="btn-login" type="submit">
             Ingresar
-            <svg viewBox="0 0 24 24">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
+            <i className="fas fa-arrow-right" style={{ marginLeft: '8px' }}></i>
           </button>
 
         </form>
