@@ -53,10 +53,20 @@
   opacity: 1;
 }
 
+.alert-body {
+  max-height: 300px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
 .alert-body p {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
+}
+
+.alert-message {
+  white-space: pre-wrap;
 }
 
 /* Alert Primaria - Azul */

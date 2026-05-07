@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../utils/auth";
+import ChatBot from "../components/ChatBot";
 import ConfirmModal from "../components/ConfirmModal";
 import Alert from "../components/Alert";
 import "../styles/admin.css";
@@ -305,6 +306,7 @@ function PersonasRegistradas() {
           />
         ))}
       </div>
+      <ChatBot />
     </div>
   );
 }

@@ -11,9 +11,12 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import EditarPersona from "./pages/EditarPersona";
+import EditarAsistencia from "./pages/EditarAsistencia";
+import AgregarPersona from "./pages/AgregarPersona";
 import PersonasRegistradas from "./pages/PersonasRegistradas";
 import Asistencias from "./pages/Asistencias";
 import ListadoAsistencias from "./pages/ListadoAsistencias";
+import Graficas from "./pages/Graficas";
 import AdminFlayers from "./pages/AdminFlayers";
 import RequireAuth from "./components/RequireAuth";
 
@@ -124,10 +127,28 @@ function App() {
             <Asistencias />
           </RequireAuth>
         } />
+        {/* Agregar Persona - Panel protegido */}
+        <Route path="/asistencia/agregar" element={
+          <RequireAuth>
+            <AgregarPersona />
+          </RequireAuth>
+        } />
+        {/* Editar Persona de Asistencia - Panel protegido */}
+        <Route path="/asistencia/editar/:id" element={
+          <RequireAuth>
+            <EditarAsistencia />
+          </RequireAuth>
+        } />
         {/* Listado de Asistencias - Panel de registros protegido */}
         <Route path="/asistencia/registros" element={
           <RequireAuth>
             <ListadoAsistencias />
+          </RequireAuth>
+        } />
+        {/* Gráficas - Panel de análisis protegido */}
+        <Route path="/asistencia/graficas" element={
+          <RequireAuth>
+            <Graficas />
           </RequireAuth>
         } />
         {/* Gestor de Flayers - Panel de administración protegido */}

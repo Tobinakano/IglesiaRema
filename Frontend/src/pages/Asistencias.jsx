@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../utils/auth';
+import ChatBot from '../components/ChatBot';
 import '../styles/asistencias.css';
 
 const GRUPOS = ['Niños', 'Jóvenes', 'Adultos'];
@@ -17,9 +18,6 @@ export default function Asistencias() {
   const [asistencias, setAsistencias] = useState({});
   const [expandedGrupos, setExpandedGrupos] = useState({ 'Niños': true, 'Jóvenes': true, 'Adultos': true });
   const [loading, setLoading] = useState(true);
-  const [nuevasPersonas, setNuevasPersonas] = useState({ 'Niños': '', 'Jóvenes': '', 'Adultos': '' });
-  const [nuevosNumeros, setNuevosNumeros] = useState({ 'Niños': '', 'Jóvenes': '', 'Adultos': '' });
-  const [nuevosSexos, setNuevosSexos] = useState({ 'Niños': '', 'Jóvenes': '', 'Adultos': '' });
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [modalBorrar, setModalBorrar] = useState(false);
   const [personaBorrar, setPersonaBorrar] = useState(null);
@@ -33,7 +31,7 @@ export default function Asistencias() {
         if (response.ok) {
           const data = await response.json();
           setSession(data);
-          if (data.rol !== 'Asistencias') {
+          if (data.rol !== 'Asistencias' && data.rol !== 'Administrador') {
             navigate('/admin');
           }
         } else {
@@ -49,6 +47,18 @@ export default function Asistencias() {
         if (res.ok) {
           const data = await res.json();
           setPersonas(data);
+          
+          // Revisar si se acaba de agregar una persona y marcarla como asistida
+          const personaAcabaDeAgregarse = localStorage.getItem('personaAcabaDeAgregarse');
+          if (personaAcabaDeAgregarse) {
+            try {
+              const nuevaPersona = JSON.parse(personaAcabaDeAgregarse);
+              setAsistencias(prev => ({ ...prev, [nuevaPersona.id]: true }));
+              localStorage.removeItem('personaAcabaDeAgregarse');
+            } catch (e) {
+              console.error('Error al procesar personaAcabaDeAgregarse:', e);
+            }
+          }
         }
       } catch (error) {
         console.error('Error cargando asistencia:', error);
@@ -106,48 +116,7 @@ export default function Asistencias() {
   };
 
   const agregarPersona = async (grupo) => {
-    const nombre = nuevasPersonas[grupo].trim();
-    const numero = nuevosNumeros[grupo].trim();
-    const sexo = nuevosSexos[grupo].trim();
-    
-    if (!nombre || !numero || !sexo) {
-      setMensajeConfirmacion('Por favor completa: nombre, número y sexo');
-      setModalConfirmacion(true);
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/asistencia', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ 
-          nombre_completo: nombre, 
-          numero: parseInt(numero),
-          sexo: sexo,
-          grupo 
-        })
-      });
-      if (res.ok) {
-        const nueva = await res.json();
-        // Recargar la lista completa del backend (ya viene ordenada)
-        const resGet = await fetch('/api/asistencia', {
-          credentials: 'include'
-        });
-        if (resGet.ok) {
-          const personasActualizadas = await resGet.json();
-          setPersonas(personasActualizadas);
-        }
-        // Pre-marcar automáticamente la nueva persona
-        setAsistencias(prev => ({ ...prev, [nueva.id]: true }));
-        // Limpiar inputs
-        setNuevasPersonas(prev => ({ ...prev, [grupo]: '' }));
-        setNuevosNumeros(prev => ({ ...prev, [grupo]: '' }));
-        setNuevosSexos(prev => ({ ...prev, [grupo]: '' }));
-      }
-    } catch (error) {
-      console.error('Error al agregar persona:', error);
-    }
+    // Función eliminada - usar página de AgregarPersona en su lugar
   };
 
   const handleGuardar = async () => {
@@ -227,6 +196,10 @@ export default function Asistencias() {
             <i className="fas fa-clipboard-list"></i>
             Listado de Registros
           </a>
+          <a href="/asistencia/graficas" className="nav-item">
+            <i className="fas fa-chart-bar"></i>
+            Gráficas
+          </a>
         </nav>
         <div className="sidebar-footer">
           <div className="sidebar-user">
@@ -296,6 +269,33 @@ export default function Asistencias() {
             </div>
           ))}
         </div>
+        
+        {/* Botón Agregar Persona */}
+        <div style={{ marginBottom: '24px' }}>
+          <button
+            onClick={() => navigate('/asistencia/agregar')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              backgroundColor: '#c9a227',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'background 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#b8941d'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#c9a227'}
+          >
+            <i className="fas fa-plus" style={{ fontSize: '16px' }}></i>
+            Agregar Persona
+          </button>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {GRUPOS.map(grupo => (
             <div key={grupo} style={{ background: '#fff', border: '1px solid #e4e6ea', borderRadius: '12px', overflow: 'hidden' }}>
@@ -310,15 +310,15 @@ export default function Asistencias() {
 
               {expandedGrupos[grupo] && (
                 <div style={{ padding: '16px 20px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 25px 1px 40px', gap: '24px', paddingBottom: '12px', borderBottom: '1px solid #e4e6ea', marginBottom: '12px', fontSize: '12px', fontWeight: '600', color: '#9098a3', textTransform: 'uppercase', alignItems: 'center' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 25px 1px 90px', gap: '24px', paddingBottom: '12px', borderBottom: '1px solid #e4e6ea', marginBottom: '12px', fontSize: '12px', fontWeight: '600', color: '#9098a3', textTransform: 'uppercase', alignItems: 'center' }}>
                     <div>Nombre</div>
                     <div></div>
                     <div></div>
-                    <div style={{ textAlign: 'center' }}>Acción</div>
+                    <div style={{ textAlign: 'center' }}>Acciones</div>
                   </div>
 
                   {personasPorGrupo[grupo].map(persona => (
-                    <div key={persona.id} style={{ display: 'grid', gridTemplateColumns: '1fr 25px 1px 40px', gap: '24px', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f0f1f3' }}>
+                    <div key={persona.id} style={{ display: 'grid', gridTemplateColumns: '1fr 25px 1px 90px', gap: '24px', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f0f1f3' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f0f1f3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '600', color: '#555b66' }}>
                           {persona.nombre_completo[0]}
@@ -329,7 +329,14 @@ export default function Asistencias() {
                         <input type="checkbox" checked={asistencias[persona.id] || false} onChange={() => toggleAsistencia(persona.id)} style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: COLORES[grupo] }} />
                       </div>
                       <div style={{ width: '1px', height: '24px', background: '#e4e6ea' }}></div>
-                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          onClick={() => navigate(`/asistencia/editar/${persona.id}`)}
+                          style={{ background: '#4b5563', color: '#fff', border: 'none', borderRadius: '4px', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                          title="Editar"
+                        >
+                          ✎
+                        </button>
                         <button
                           onClick={() => handleBorrar(persona.id, persona.nombre_completo)}
                           style={{ background: '#ff4444', color: '#fff', border: 'none', borderRadius: '4px', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
@@ -340,78 +347,6 @@ export default function Asistencias() {
                       </div>
                     </div>
                   ))}
-                  
-                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e4e6ea', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      placeholder="Nombre..."
-                      value={nuevasPersonas[grupo]}
-                      onChange={(e) => setNuevasPersonas(prev => ({ ...prev, [grupo]: e.target.value }))}
-                      style={{ flex: 1, padding: '10px 12px', border: '1px solid #e4e6ea', borderRadius: '8px', fontSize: '14px' }}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Número"
-                      value={nuevosNumeros[grupo]}
-                      onChange={(e) => setNuevosNumeros(prev => ({ ...prev, [grupo]: e.target.value }))}
-                      style={{ flex: 1, padding: '10px 12px', border: '1px solid #e4e6ea', borderRadius: '8px', fontSize: '14px' }}
-                      min="0"
-                    />
-                    <button
-                      onClick={() => setNuevosSexos(prev => ({ ...prev, [grupo]: 'F' }))}
-                      style={{ 
-                        padding: '10px 14px', 
-                        background: nuevosSexos[grupo] === 'F' ? '#ef4444' : '#e4e6ea',
-                        color: nuevosSexos[grupo] === 'F' ? '#fff' : '#1a1a1a',
-                        border: 'none', 
-                        borderRadius: '8px', 
-                        fontWeight: '600', 
-                        cursor: 'pointer', 
-                        fontSize: '13px',
-                        transition: 'all 0.2s',
-                        minWidth: '44px'
-                      }}
-                    >
-                      F
-                    </button>
-                    <button
-                      onClick={() => setNuevosSexos(prev => ({ ...prev, [grupo]: 'M' }))}
-                      style={{ 
-                        padding: '10px 14px', 
-                        background: nuevosSexos[grupo] === 'M' ? '#3b82f6' : '#e4e6ea',
-                        color: nuevosSexos[grupo] === 'M' ? '#fff' : '#1a1a1a',
-                        border: 'none', 
-                        borderRadius: '8px', 
-                        fontWeight: '600', 
-                        cursor: 'pointer', 
-                        fontSize: '13px',
-                        transition: 'all 0.2s',
-                        minWidth: '44px'
-                      }}
-                    >
-                      M
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (nuevasPersonas[grupo].trim() && nuevosNumeros[grupo].trim() && nuevosSexos[grupo]) {
-                          agregarPersona(grupo);
-                        }
-                      }}
-                      style={{ 
-                        padding: '10px 20px', 
-                        background: COLORES[grupo], 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '8px', 
-                        fontWeight: '600', 
-                        cursor: 'pointer', 
-                        fontSize: '13px',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      Agregar
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
@@ -471,6 +406,7 @@ export default function Asistencias() {
           </div>
         )}
       </main>
+      <ChatBot />
     </div>
   );
 }

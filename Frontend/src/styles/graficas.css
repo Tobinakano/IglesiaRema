@@ -1,0 +1,114 @@
+/* Loading state */
+.graficas-loading {
+  padding: 40px;
+}
+
+/* Page header */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-header-left {
+  flex: 1;
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-3);
+  font-weight: 300;
+}
+
+/* Navbar and user menu */
+.graficas-navbar-right {
+  position: relative;
+}
+
+.graficas-user-avatar {
+  cursor: pointer;
+}
+
+.graficas-user-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e4e6ea;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1000;
+}
+
+.graficas-user-menu-content {
+  padding: 12px 0;
+}
+
+.graficas-user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: #1a1a1a;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.graficas-user-menu-item:hover {
+  background: #f4f5f7;
+}
+
+.graficas-user-menu-item.danger:hover {
+  background: #fee2e2;
+}
+
+.graficas-user-menu-item.danger {
+  color: #ef4444;
+}
+
+.graficas-user-menu-icon {
+  width: 20px;
+  text-align: center;
+}
+
+.graficas-user-menu-divider {
+  height: 1px;
+  background: #e4e6ea;
+  margin: 8px 0;
+}
+
+/* Empty state */
+.graficas-empty-container {
+  background: #fff;
+  border: 1px solid #e4e6ea;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 24px;
+  text-align: center;
+}
+
+.graficas-empty-content {
+  color: #9098a3;
+  font-size: 16px;
+}
+
+.graficas-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+  color: #d0d5dd;
+}

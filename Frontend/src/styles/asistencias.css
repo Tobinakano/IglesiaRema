@@ -623,3 +623,206 @@ input {
         grid-template-columns: 1fr 1fr;
     }
 }
+
+/* ═══════════════════════════════════════
+   AGREGAR PERSONA PAGE STYLES
+═══════════════════════════════════════ */
+
+.agregar-persona-container {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+    box-shadow: var(--shadow-md);
+}
+
+.agregar-persona-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.agregar-persona-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.agregar-persona-buttons button {
+    flex: 1;
+}
+
+.campos-obligatorios-nota {
+    font-size: 13px;
+    color: #888;
+    text-align: center;
+    margin-top: 8px;
+    padding: 0;
+}
+
+.campos-obligatorios-nota span {
+    font-weight: 600;
+    color: #666;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px 14px;
+    font-size: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: 'Outfit', sans-serif;
+    background: var(--white);
+    color: var(--text);
+}
+
+.form-group input::placeholder {
+    color: var(--text-3);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--black);
+    box-shadow: 0 0 0 3px rgba(13, 13, 13, 0.07);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.sexo-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.sexo-btn {
+    flex: 1;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sexo-btn.active {
+    border-color: var(--black);
+    background: var(--black);
+    color: var(--white);
+}
+
+.sexo-btn:hover:not(.active) {
+    border-color: var(--text-3);
+}
+
+.btn-submit {
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-cancelar {
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-cancelar:hover {
+    border-color: var(--text-3);
+    background: var(--gray-bg);
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-box p {
+    color: var(--text);
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.btn-modal {
+    padding: 10px 24px;
+    background: var(--gold);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Outfit', sans-serif;
+}
+
+.btn-modal:hover {
+    background: #b8941d;
+}

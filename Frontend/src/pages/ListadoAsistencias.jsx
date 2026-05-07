@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { logout } from '../utils/auth';
+import ChatBot from '../components/ChatBot';
 import '../styles/asistencias.css';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const COLORES = {
   'Niños': '#3b82f6',
@@ -83,81 +85,131 @@ export default function ListadoAsistencias() {
 
   const generarPDF = (fecha, personas) => {
     const doc = new jsPDF();
-    const fechaFormato = new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    const fechaFormato = new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
     
-    // Título
-    doc.setFontSize(18);
+    // Colores de grupos
+    const coloresGrupo = { 
+      'Niños': [96, 165, 250],      // #60a5fa
+      'Jóvenes': [129, 140, 248],   // #818cf8
+      'Adultos': [52, 211, 153]     // #34d399
+    };
+    
+    let currentPage = 1;
+    let yPos = 20;
+    
+    // ============ ENCABEZADO ============
+    doc.setFontSize(22);
     doc.setFont(undefined, 'bold');
-    doc.text('Iglesia Cristiana Remanente', 105, 20, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+    doc.text('Iglesia Cristiana Remanente', 105, yPos, { align: 'center' });
+    yPos += 8;
     
-    // Subtítulo
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(`Registro de Asistencias`, 105, 30, { align: 'center' });
+    doc.text('Registro de Asistencias', 105, yPos, { align: 'center' });
+    yPos += 6;
     
-    // Fecha
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Fecha: ${fechaFormato}`, 20, 45);
-    
-    // Total de asistentes
-    doc.setFont(undefined, 'bold');
-    doc.text(`Total de personas: ${personas.length}`, 20, 55);
-    
-    // Línea separadora
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 60, 190, 60);
-    
-    // Encabezados de tabla
-    doc.setFont(undefined, 'bold');
     doc.setFontSize(10);
-    const columnWidths = [30, 60, 30, 30, 20];
-    const headers = ['#', 'Nombre', 'Número', 'Sexo', 'Grupo'];
-    let xPos = 20;
-    headers.forEach((header, i) => {
-      doc.text(header, xPos, 70);
-      xPos += columnWidths[i];
-    });
-    
-    // Línea separadora
-    doc.line(20, 72, 190, 72);
-    
-    // Datos
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
-    let yPos = 80;
+    doc.setTextColor(85, 85, 85);
+    doc.text(`Asistencias registradas el ${fechaFormato}`, 105, yPos, { align: 'center' });
+    yPos += 10;
     
-    personas.forEach((persona, index) => {
-      xPos = 20;
-      doc.text(String(index + 1), xPos, yPos);
-      xPos += columnWidths[0];
+    // ============ GRUPOS ============
+    const grupos = ['Niños', 'Jóvenes', 'Adultos'];
+    
+    grupos.forEach((grupo) => {
+      const personasGrupo = personas.filter(p => p.grupo === grupo);
       
-      doc.text(persona.nombre_completo.substring(0, 35), xPos, yPos);
-      xPos += columnWidths[1];
+      if (personasGrupo.length === 0) return;
       
-      doc.text(String(persona.numero || '-'), xPos, yPos);
-      xPos += columnWidths[2];
-      
-      doc.text(persona.sexo || '-', xPos, yPos);
-      xPos += columnWidths[3];
-      
-      doc.text(persona.grupo || '-', xPos, yPos);
-      
-      yPos += 7;
-      
-      // Si llegamos al final de la página, crear una nueva
-      if (yPos > 270) {
+      // Verificar si necesitamos nueva página para el grupo
+      if (yPos > 240) {
         doc.addPage();
         yPos = 20;
+        currentPage++;
       }
+      
+      // Encabezado del grupo con punto de color
+      const [r, g, b] = coloresGrupo[grupo];
+      
+      // Dibujar punto de color
+      doc.setFillColor(r, g, b);
+      doc.circle(23, yPos - 2, 1.5, 'F');
+      
+      // Texto del grupo
+      doc.setFontSize(13);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${grupo} (${personasGrupo.length})`, 28, yPos);
+      yPos += 7;
+      
+      // Tabla del grupo
+      const tableData = personasGrupo.map(p => [
+        p.nombre_completo,
+        p.numero || '-',
+        p.sexo || '-'
+      ]);
+      
+      autoTable(doc, {
+        head: [['Nombre', 'Número', 'Género']],
+        body: tableData,
+        startY: yPos,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [245, 245, 245],
+          textColor: [102, 102, 102],
+          fontSize: 10,
+          fontStyle: 'bold',
+          halign: 'left',
+          padding: 3,
+          lineColor: [224, 224, 224],
+          lineWidth: 0.5
+        },
+        bodyStyles: {
+          textColor: [34, 34, 34],
+          fontSize: 11,
+          padding: 3,
+          lineColor: [240, 240, 240],
+          lineWidth: 0.3
+        },
+        alternateRowStyles: {
+          fillColor: [250, 250, 250]
+        },
+        columnStyles: {
+          0: { halign: 'left', cellWidth: 100 },
+          1: { halign: 'center', cellWidth: 40 },
+          2: { halign: 'center', cellWidth: 30 }
+        },
+        margin: { left: 20, right: 20 },
+        didDrawPage: function() {
+          // Este callback se ejecuta después de dibujar la tabla
+        }
+      });
+      
+      yPos = doc.lastAutoTable.finalY + 8;
     });
     
-    // Footer
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 105, 285, { align: 'center' });
+    // ============ FOOTER ============
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(160, 160, 160);
+      doc.text(
+        `Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`,
+        105,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
     
-    // Descargar
+    // Descargar PDF
     doc.save(`Asistencias_${fecha}.pdf`);
   };
 
@@ -213,6 +265,10 @@ export default function ListadoAsistencias() {
           <a href="/asistencia/registros" className="nav-item active">
             <i className="fas fa-clipboard-list"></i>
             Listado de Registros
+          </a>
+          <a href="/asistencia/graficas" className="nav-item">
+            <i className="fas fa-chart-bar"></i>
+            Gráficas
           </a>
         </nav>
         <div className="sidebar-footer">
@@ -309,9 +365,16 @@ export default function ListadoAsistencias() {
                             <i className="fas fa-eye" style={{ fontSize: '18px' }}></i>
                           </button>
                           <button
-                            onClick={() => {
-                              const personas = registros.find(r => r.fecha === registro.fecha)?.personas || [];
-                              generarPDF(registro.fecha, personas);
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/asistencia/registros/${registro.fecha}`, { credentials: 'include' });
+                                if (res.ok) {
+                                  const personas = await res.json();
+                                  generarPDF(registro.fecha, personas);
+                                }
+                              } catch (error) {
+                                console.error('Error generando PDF:', error);
+                              }
                             }}
                             title="Imprimir"
                             style={{ background: '#f0f1f3', border: '1px solid #e4e6ea', cursor: 'pointer', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9098a3', width: '35px', height: '35px', borderRadius: '4px', transition: 'all 0.2s' }}
@@ -378,7 +441,7 @@ export default function ListadoAsistencias() {
                             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px', padding: '12px 16px', background: '#fff', borderBottom: '2px solid #e4e6ea', fontWeight: '600', fontSize: '12px', color: '#555b66', textTransform: 'uppercase' }}>
                               <div>Nombre</div>
                               <div style={{ textAlign: 'center' }}>Número</div>
-                              <div style={{ textAlign: 'center' }}>Sexo</div>
+                              <div style={{ textAlign: 'center' }}>Género</div>
                             </div>
                             
                             {/* Filas */}
@@ -444,6 +507,7 @@ export default function ListadoAsistencias() {
           </div>
         </div>
       )}
+      <ChatBot />
     </div>
   );
 }

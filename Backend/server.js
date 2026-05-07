@@ -6,6 +6,12 @@ const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const dotenv = require('dotenv');
+const { callOpenAI, getStats } = require('./openai-config');
+const { procesarMensajeChat, obtenerNombreMes } = require('./chatbot-service');
+
+// Cargar variables de entorno
+dotenv.config();
 
 const app = express();
 const PORT = 4000;
@@ -252,7 +258,7 @@ app.get('/api/session', (req, res) => {
 
 // Endpoint para obtener el listado de asistencia
 app.get('/api/asistencia', requireAuth, (req, res) => {
-  db.all('SELECT id, nombre_completo, numero, sexo, grupo FROM asistencia ORDER BY grupo, LOWER(nombre_completo)', (err, rows) => {
+  db.all('SELECT id, nombre_completo, numero, sexo, grupo, fecha_nacimiento, direccion, barrio FROM asistencia ORDER BY grupo, LOWER(nombre_completo)', (err, rows) => {
     if (err) return res.status(500).json({ error: 'Error en el servidor' });
     res.json(rows || []);
   });
@@ -260,18 +266,18 @@ app.get('/api/asistencia', requireAuth, (req, res) => {
 
 // Endpoint para crear nuevas personas en asistencia
 app.post('/api/asistencia', requireAuth, (req, res) => {
-  const { nombre_completo, numero, sexo, grupo } = req.body;
+  const { nombre_completo, numero, sexo, grupo, fecha_nacimiento, direccion, barrio } = req.body;
   
-  if (!nombre_completo || !numero || !sexo || !grupo) {
-    return res.status(400).json({ error: 'Nombre completo, número, sexo y grupo son requeridos' });
+  if (!nombre_completo || !numero || !sexo) {
+    return res.status(400).json({ error: 'Nombre completo, número de teléfono y género son requeridos' });
   }
   
   db.run(
-    'INSERT INTO asistencia (nombre_completo, numero, sexo, grupo) VALUES (?, ?, ?, ?)',
-    [nombre_completo, numero, sexo, grupo],
+    'INSERT INTO asistencia (nombre_completo, numero, sexo, grupo, fecha_nacimiento, direccion, barrio) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [nombre_completo, numero, sexo, grupo, fecha_nacimiento || null, direccion || null, barrio || null],
     function(err) {
       if (err) return res.status(500).json({ error: 'Error al crear la persona' });
-      res.json({ ok: true, id: this.lastID, nombre_completo, numero, sexo, grupo });
+      res.json({ ok: true, id: this.lastID, nombre_completo, numero, sexo, grupo, fecha_nacimiento, direccion, barrio });
     }
   );
 });
@@ -367,6 +373,47 @@ app.get('/api/asistencia/registros/:fecha', requireAuth, (req, res) => {
   );
 });
 
+// Endpoint para obtener una persona de asistencia por ID
+app.get('/api/asistencia/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  db.get('SELECT id, nombre_completo, numero, sexo, grupo, fecha_nacimiento, direccion, barrio FROM asistencia WHERE id = ?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: 'Error en el servidor' });
+    if (!row) return res.status(404).json({ error: 'Persona no encontrada' });
+    res.json(row);
+  });
+});
+
+// Endpoint para actualizar una persona de asistencia
+app.put('/api/asistencia/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  const { nombre_completo, numero, sexo, grupo, fecha_nacimiento, direccion, barrio } = req.body;
+  
+  console.log('[PUT ASISTENCIA] Actualizando persona ID:', id);
+  console.log('[PUT ASISTENCIA] Datos recibidos:', { nombre_completo, numero, sexo, grupo, fecha_nacimiento, direccion, barrio });
+  
+  // Solo nombre, número y sexo son obligatorios
+  if (!nombre_completo || !numero || !sexo) {
+    return res.status(400).json({ error: 'Nombre completo, número de teléfono y género son requeridos' });
+  }
+  
+  db.run(
+    'UPDATE asistencia SET nombre_completo = ?, numero = ?, sexo = ?, grupo = ?, fecha_nacimiento = ?, direccion = ?, barrio = ? WHERE id = ?',
+    [nombre_completo, numero, sexo, grupo || 'Adultos', fecha_nacimiento || null, direccion || null, barrio || null, id],
+    function(err) {
+      if (err) {
+        console.error('[PUT ASISTENCIA ERROR]:', err);
+        return res.status(500).json({ error: 'Error al actualizar la persona' });
+      }
+      if (this.changes === 0) {
+        console.log('[PUT ASISTENCIA] Persona no encontrada');
+        return res.status(404).json({ error: 'Persona no encontrada' });
+      }
+      console.log('[PUT ASISTENCIA] Persona actualizada exitosamente');
+      res.json({ ok: true, id, nombre_completo, numero, sexo, grupo, fecha_nacimiento, direccion, barrio });
+    }
+  );
+});
+
 // Endpoint para eliminar un registro de asistencia por fecha
 app.delete('/api/asistencia/registros/:fecha', requireAuth, (req, res) => {
   const { fecha } = req.params;
@@ -391,6 +438,36 @@ app.delete('/api/asistencia/:id', requireAuth, (req, res) => {
     }
     res.json({ ok: true });
   });
+});
+
+// Endpoint para obtener datos de gráficas de asistencias por mes
+app.get('/api/asistencia/graficas/:mes', requireAuth, (req, res) => {
+  const { mes } = req.params; // Formato: 2026-04
+  
+  console.log(`[GRÁFICAS] Obteniendo datos para mes: ${mes}`);
+  
+  // Query que agrupa por fecha y cuenta por grupo
+  db.all(
+    `SELECT 
+      fecha,
+      CAST(substr(fecha, 9, 2) AS INTEGER) as dia,
+      SUM(CASE WHEN grupo = 'Niños' THEN 1 ELSE 0 END) as niños,
+      SUM(CASE WHEN grupo = 'Jóvenes' THEN 1 ELSE 0 END) as jóvenes,
+      SUM(CASE WHEN grupo = 'Adultos' THEN 1 ELSE 0 END) as adultos
+    FROM asistencia_registros
+    WHERE fecha LIKE ? || '%'
+    GROUP BY fecha
+    ORDER BY fecha ASC`,
+    [mes],
+    (err, rows) => {
+      if (err) {
+        console.error('[GRÁFICAS ERROR]:', err.message);
+        return res.status(500).json({ error: 'Error en el servidor' });
+      }
+      console.log('[GRÁFICAS] Datos obtenidos:', rows);
+      res.json(rows || []);
+    }
+  );
 });
 
 // ═══════════════════════════════════════════
@@ -572,6 +649,229 @@ app.put('/api/flayers/:id', (req, res) => {
       res.json({ ok: true });
     }
   );
+});
+
+// ═══════════════════════════════════════════
+// ENDPOINT PARA PROCESAR BÚSQUEDA CON IA
+// ═══════════════════════════════════════════
+
+// Procesar búsqueda de gráficas con OpenAI
+app.post('/api/procesar-busqueda', requireAuth, async (req, res) => {
+  const { texto } = req.body;
+
+  if (!texto || texto.trim() === '') {
+    return res.status(400).json({ error: 'El texto de búsqueda es requerido' });
+  }
+
+  try {
+    console.log('[BÚSQUEDA] Procesando:', texto);
+
+    // Llamar a OpenAI con controles de seguridad
+    const systemPrompt = `Eres un asistente que interpreta solicitudes de gráficas de asistencias de una iglesia.
+          
+Responde en formato JSON con los siguientes campos:
+- mes: número del mes (1-12) o null si se solicita todo el año
+- genero: "Masculino", "Femenino" o null si no se especifica
+- tipoGrafica: "barras" (por defecto), "circular" o "linea"
+- tipoDatos: "asistencias" (defecto), "visitas_unicas" (personas únicas sin repetir) o "ambos"
+- año: número del año (ej: 2026)
+
+Ejemplos:
+- "dame la gráfica de enero" → {"mes": 1, "genero": null, "tipoGrafica": "barras", "tipoDatos": "asistencias", "año": 2026}
+- "gráfica circular de junio con mujeres" → {"mes": 6, "genero": "Femenino", "tipoGrafica": "circular", "tipoDatos": "asistencias", "año": 2026}
+- "visitas por mes del año sin repetir" → {"mes": null, "genero": null, "tipoGrafica": "barras", "tipoDatos": "visitas_unicas", "año": 2026}
+
+Solo responde el JSON, sin explicaciones adicionales.`;
+
+    const result = await callOpenAI(texto, systemPrompt);
+    const respuestaIA = result.content;
+    console.log('[IA] Respuesta:', respuestaIA);
+    console.log('[IA] Tokens usados:', result.usage);
+
+    // Parsear la respuesta JSON de OpenAI
+    const parametros = JSON.parse(respuestaIA);
+
+    // Validar parámetros
+    if (!parametros.año) parametros.año = new Date().getFullYear();
+    if (!parametros.tipoGrafica) parametros.tipoGrafica = 'barras';
+    if (!parametros.tipoDatos) parametros.tipoDatos = 'asistencias';
+
+    // Consultar BD según los parámetros
+    // Determinar si contar todas las asistencias o solo personas únicas
+    const esVisitasUnicas = parametros.tipoDatos === 'visitas_unicas';
+    const selectCantidad = esVisitasUnicas ? 'COUNT(DISTINCT persona_id) as cantidad' : 'COUNT(*) as cantidad';
+    const groupByClause = esVisitasUnicas ? 'GROUP BY fecha' : 'GROUP BY fecha, grupo';
+    const groupByAnual = esVisitasUnicas ? 'GROUP BY mes' : 'GROUP BY mes, grupo';
+    
+    let query = `SELECT 
+      fecha,
+      CAST(substr(fecha, 6, 2) AS INTEGER) as mes,
+      sexo,
+      grupo,
+      CAST(substr(fecha, 9, 2) AS INTEGER) as dia,
+      ${selectCantidad}
+    FROM asistencia_registros
+    WHERE fecha LIKE ? || '%'`;
+
+    const params = [`${parametros.año}`];
+
+    // Filtrar por género si se especifica
+    if (parametros.genero) {
+      query += ` AND sexo = ?`;
+      params.push(parametros.genero === 'Femenino' ? 'F' : 'M');
+    }
+
+    // Agrupar según el tipo de datos
+    if (parametros.mes) {
+      // Si es un mes específico
+      query += ` AND mes = ?`;
+      params.push(parametros.mes);
+      query += ` ${groupByClause} ORDER BY fecha ASC`;
+    } else {
+      // Todo el año
+      query += ` ${groupByAnual} ORDER BY mes ASC`;
+    }
+
+    console.log('[BD] Query:', query);
+    console.log('[BD] Params:', params);
+
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        console.error('[BD ERROR]:', err);
+        return res.status(500).json({ error: 'Error consultando la base de datos' });
+      }
+
+      console.log('[BD] Datos obtenidos:', rows);
+
+      // Transformar datos según el tipo de gráfica
+      let datosTransformados = [];
+
+      if (parametros.mes) {
+        // Agrupar por fecha para gráfica de un mes
+        const porFecha = {};
+        rows.forEach(row => {
+          if (!porFecha[row.fecha]) {
+            porFecha[row.fecha] = {
+              fecha: row.fecha,
+              diaLabel: `${row.dia}`,
+              adultos: 0,
+              jovenes: 0,
+              ninos: 0
+            };
+          }
+          if (row.grupo === 'Adultos') porFecha[row.fecha].adultos += row.cantidad;
+          if (row.grupo === 'Jóvenes') porFecha[row.fecha].jovenes += row.cantidad;
+          if (row.grupo === 'Niños') porFecha[row.fecha].ninos += row.cantidad;
+        });
+        datosTransformados = Object.values(porFecha);
+      } else {
+        // Agrupar por mes para gráfica anual
+        const mesesNombres = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        
+        const porMes = {};
+        for (let i = 1; i <= 12; i++) {
+          porMes[i] = {
+            mes: mesesNombres[i],
+            visitantes: 0
+          };
+        }
+
+        rows.forEach(row => {
+          porMes[row.mes].visitantes += row.cantidad;
+        });
+
+        datosTransformados = Object.values(porMes);
+      }
+
+      res.json({
+        parametros,
+        datos: datosTransformados
+      });
+    });
+  } catch (error) {
+    console.error('[BÚSQUEDA ERROR]:', error);
+    res.status(500).json({ 
+      error: 'Error al procesar la búsqueda',
+      detalles: error.message 
+    });
+  }
+});
+
+// ═══════════════════════════════════════════
+// ENDPOINT DE ESTADÍSTICAS DE OPENAI
+// ═══════════════════════════════════════════
+app.get('/api/openai-stats', requireAuth, (req, res) => {
+  const stats = getStats();
+  res.json({
+    ok: true,
+    stats,
+    message: `Tokens disponibles hoy: ${stats.tokensAvailable} / ${stats.config.maxTokensPerDay} (${stats.percentageUsed}% usado)`
+  });
+});
+
+// ═══════════════════════════════════════════
+// ENDPOINT DEL CHATBOT INTELIGENTE
+// ═══════════════════════════════════════════
+app.post('/api/chat', requireAuth, async (req, res) => {
+  try {
+    const { message, page = 'graficas', year = new Date().getFullYear() } = req.body;
+    
+    // Validar input
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Mensaje requerido' });
+    }
+    
+    // Procesar mensaje y detectar comandos
+    const procesamiento = await procesarMensajeChat(message, page, year);
+    
+    if (procesamiento.error) {
+      return res.status(500).json({ error: procesamiento.error });
+    }
+    
+    // Llamar a OpenAI con context
+    let respuestaIA;
+    let respuestaCompleta = '';
+    
+    try {
+      respuestaIA = await callOpenAI(message, procesamiento.systemPrompt);
+      respuestaCompleta = respuestaIA.content;
+    } catch (error) {
+      console.error('Error llamando OpenAI:', error);
+      respuestaCompleta = "Disculpa, tengo un problema técnico. Por favor intenta de nuevo.";
+    }
+    
+    // Respuesta para gráficas
+    let grafica = null;
+    if (procesamiento.esComandoGrafica && procesamiento.datosGrafica) {
+      grafica = {
+        tipo: procesamiento.tipoGrafica,
+        mes: procesamiento.mesGrafica,
+        nombreMes: procesamiento.mesGrafica ? obtenerNombreMes(procesamiento.mesGrafica) : null,
+        datos: procesamiento.datosGrafica,
+        year: year
+      };
+    }
+    
+    // Enviar respuesta
+    res.json({
+      success: true,
+      mensaje: respuestaCompleta,
+      isComandoGrafica: procesamiento.esComandoGrafica,
+      grafica: grafica,
+      contexto: {
+        pagina: page,
+        year: year
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error en /api/chat:', error);
+    res.status(500).json({ 
+      error: 'Error procesando mensaje',
+      details: error.message 
+    });
+  }
 });
 
 app.listen(PORT, () => {

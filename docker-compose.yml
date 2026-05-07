@@ -4,6 +4,7 @@ services:
     build:
       context: ./Backend
       dockerfile: Dockerfile
+    env_file: ./Backend/.env
     volumes:
       - ./Backend/db:/app/db
       - uploads_volume:/app/uploads

@@ -593,7 +593,13 @@ tbody td {
 
 .form-actions {
   display: flex;
+  flex-direction: row;
   gap: 12px;
+}
+
+.form-actions .btn-cancel,
+.form-actions .btn-submit {
+  flex: 1;
 }
 
 .btn-cancel,

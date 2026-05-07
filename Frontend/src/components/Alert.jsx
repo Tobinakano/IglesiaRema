@@ -16,7 +16,7 @@ function Alert({ type = "info", title, message, onClose, autoClose = true }) {
         <button className="alert-close" onClick={onClose}>×</button>
       </div>
       <div className="alert-body">
-        <p>{message}</p>
+        <p className="alert-message">{message}</p>
       </div>
     </div>
   );
