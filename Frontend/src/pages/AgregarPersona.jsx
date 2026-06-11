@@ -235,7 +235,6 @@ export default function AgregarPersona() {
                       background: formData.sexo === 'M' ? '#3b82f6' : '#ffffff',
                       color: formData.sexo === 'M' ? '#fff' : '#1a1a1a',
                       cursor: 'pointer',
-                      transition: 'all 0.2s',
                       fontFamily: 'Outfit, sans-serif'
                     }}
                   >
@@ -254,7 +253,6 @@ export default function AgregarPersona() {
                       background: formData.sexo === 'F' ? '#ef4444' : '#ffffff',
                       color: formData.sexo === 'F' ? '#fff' : '#1a1a1a',
                       cursor: 'pointer',
-                      transition: 'all 0.2s',
                       fontFamily: 'Outfit, sans-serif'
                     }}
                   >

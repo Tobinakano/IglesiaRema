@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import ChatBot from "../components/ChatBot";
 import "../styles/flayers.css";
 import "../styles/admin.css";
 
@@ -515,7 +514,6 @@ function AdminFlayers() {
           </div>
         </div>
       </main>
-      <ChatBot />
     </div>
   );
 }

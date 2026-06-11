@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../utils/auth';
-import ChatBot from '../components/ChatBot';
 import '../styles/asistencias.css';
 
 const GRUPOS = ['Niños', 'Jóvenes', 'Adultos'];
@@ -406,7 +405,6 @@ export default function Asistencias() {
           </div>
         )}
       </main>
-      <ChatBot />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { logout } from '../utils/auth';
-import ChatBot from '../components/ChatBot';
 import '../styles/asistencias.css';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -507,7 +506,6 @@ export default function ListadoAsistencias() {
           </div>
         </div>
       )}
-      <ChatBot />
     </div>
   );
 }
