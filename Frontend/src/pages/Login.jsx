@@ -4,6 +4,11 @@ import "../styles/global.css";
 import "../styles/login.css";
 import logoNegro from "../assets/images/Logo-negro.png";
 
+// URL Inteligente: Usa Render en internet, y el proxy local en tu computadora
+const API_BASE_URL = window.location.hostname === "localhost" 
+  ? "" 
+  : "https://iglesia-rema-backend.onrender.com";
+
 function Login() {
   const [usuario, setUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
@@ -24,8 +29,8 @@ function Login() {
     try {
       console.log("🔐 Intentando login con:", usuario);
       
-      // Usar /api en lugar de localhost:4000 para que funcione en Docker
-      const res = await fetch("/api/login", {
+      // CAMBIO AQUÍ: Se le añade la URL base antes de /api/login
+      const res = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -46,7 +51,8 @@ function Login() {
       
       // Obtener rol del usuario
       console.log("🔍 Obteniendo sesión...");
-      const sessionRes = await fetch("/api/session", {
+      // CAMBIO AQUÍ: Se le añade la URL base antes de /api/session
+      const sessionRes = await fetch(`${API_BASE_URL}/api/session`, {
         credentials: "include",
       });
       
