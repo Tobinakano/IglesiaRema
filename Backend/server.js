@@ -21,11 +21,25 @@ const pool = new Pool({
 });
 
 // Middlewares
+const allowedOrigins = [
+  'https://iglesia-rema.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
 app.use(cors({ 
-  origin: '*', // Permitir conexiones desde cualquier origen para la fase Beta
+  origin: function (origin, callback) {
+    // Permitir peticiones sin origen (como apps móviles o herramientas tipo Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'El origen CORS para este sitio no está permitido.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type']
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(session({
