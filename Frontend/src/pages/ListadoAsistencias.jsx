@@ -5,6 +5,11 @@ import '../styles/asistencias.css';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+// 1. Definir la URL base del backend dinámicamente para producción y desarrollo
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? ''
+  : 'https://iglesia-rema-backend.onrender.com';
+
 const COLORES = {
   'Niños': '#3b82f6',
   'Jóvenes': '#8b5cf6',
@@ -24,9 +29,10 @@ export default function ListadoAsistencias() {
   const [registroBorrar, setRegistroBorrar] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
+  // 2. Ajustado fetch de carga con la URL Base externa
   const cargarRegistros = async () => {
     try {
-      const res = await fetch('/api/asistencia/registros', { credentials: 'include' });
+      const res = await fetch(`${API_BASE_URL}/api/asistencia/registros`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setRegistros(data);
@@ -39,11 +45,13 @@ export default function ListadoAsistencias() {
   useEffect(() => {
     const iniciar = async () => {
       try {
-        const response = await fetch('/api/session', { credentials: 'include' });
+        // 3. Ajustado fetch de verificación de sesión con la URL Base externa
+        const response = await fetch(`${API_BASE_URL}/api/session`, { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setSession(data);
-          if (data.rol !== 'Asistencias') {
+          // Permitir el ingreso tanto a 'Asistencias' como a 'Administrador'
+          if (data.rol !== 'Asistencias' && data.rol !== 'Administrador') {
             navigate('/admin');
           }
         } else {
@@ -70,9 +78,10 @@ export default function ListadoAsistencias() {
     }
   };
 
+  // 4. Ajustado fetch de detalles por fecha con la URL Base externa
   const verListado = async (fechaSeleccionada) => {
     try {
-      const res = await fetch(`/api/asistencia/registros/${fechaSeleccionada}`, { credentials: 'include' });
+      const res = await fetch(`${API_BASE_URL}/api/asistencia/registros/${fechaSeleccionada}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setDetalles({ fecha: fechaSeleccionada, personas: data });
@@ -90,17 +99,15 @@ export default function ListadoAsistencias() {
       day: 'numeric' 
     });
     
-    // Colores de grupos
     const coloresGrupo = { 
-      'Niños': [96, 165, 250],      // #60a5fa
-      'Jóvenes': [129, 140, 248],   // #818cf8
-      'Adultos': [52, 211, 153]     // #34d399
+      'Niños': [96, 165, 250],
+      'Jóvenes': [129, 140, 248],
+      'Adultos': [52, 211, 153]
     };
     
     let currentPage = 1;
     let yPos = 20;
     
-    // ============ ENCABEZADO ============
     doc.setFontSize(22);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(0, 0, 0);
@@ -118,7 +125,6 @@ export default function ListadoAsistencias() {
     doc.text(`Asistencias registradas el ${fechaFormato}`, 105, yPos, { align: 'center' });
     yPos += 10;
     
-    // ============ GRUPOS ============
     const grupos = ['Niños', 'Jóvenes', 'Adultos'];
     
     grupos.forEach((grupo) => {
@@ -126,28 +132,23 @@ export default function ListadoAsistencias() {
       
       if (personasGrupo.length === 0) return;
       
-      // Verificar si necesitamos nueva página para el grupo
       if (yPos > 240) {
         doc.addPage();
         yPos = 20;
         currentPage++;
       }
       
-      // Encabezado del grupo con punto de color
       const [r, g, b] = coloresGrupo[grupo];
       
-      // Dibujar punto de color
       doc.setFillColor(r, g, b);
       doc.circle(23, yPos - 2, 1.5, 'F');
       
-      // Texto del grupo
       doc.setFontSize(13);
       doc.setFont(undefined, 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text(`${grupo} (${personasGrupo.length})`, 28, yPos);
       yPos += 7;
       
-      // Tabla del grupo
       const tableData = personasGrupo.map(p => [
         p.nombre_completo,
         p.numero || '-',
@@ -185,15 +186,12 @@ export default function ListadoAsistencias() {
           2: { halign: 'center', cellWidth: 30 }
         },
         margin: { left: 20, right: 20 },
-        didDrawPage: function() {
-          // Este callback se ejecuta después de dibujar la tabla
-        }
+        didDrawPage: function() {}
       });
       
       yPos = doc.lastAutoTable.finalY + 8;
     });
     
-    // ============ FOOTER ============
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -208,7 +206,6 @@ export default function ListadoAsistencias() {
       );
     }
     
-    // Descargar PDF
     doc.save(`Asistencias_${fecha}.pdf`);
   };
 
@@ -217,20 +214,19 @@ export default function ListadoAsistencias() {
     setModalBorrar(true);
   };
 
+  // 5. Ajustado fetch de eliminación con la URL Base externa
   const confirmaBorrar = async () => {
     if (!registroBorrar) return;
 
     try {
-      const res = await fetch(`/api/asistencia/registros/${registroBorrar.fecha}`, {
+      const res = await fetch(`${API_BASE_URL}/api/asistencia/registros/${registroBorrar.fecha}`, {
         method: 'DELETE',
         credentials: 'include'
       });
 
       if (res.ok) {
-        // Remover la fecha de la lista principal
         setRegistros(prev => prev.filter(r => r.fecha !== registroBorrar.fecha));
         
-        // Cerrar detalles si estaba abierto
         if (detalles && detalles.fecha === registroBorrar.fecha) {
           setDetalles(null);
         }
@@ -311,7 +307,6 @@ export default function ListadoAsistencias() {
                   <i className="fas fa-arrow-right-from-bracket" style={{ width: '20px', textAlign: 'center' }}></i>
                   <span>Cerrar Sesión</span>
                 </a>
-
               </div>
             </div>
           )}
@@ -358,15 +353,16 @@ export default function ListadoAsistencias() {
                             onClick={() => verListado(registro.fecha)}
                             title="Ver asistencias"
                             style={{ background: '#f0f1f3', border: '1px solid #e4e6ea', cursor: 'pointer', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6', width: '35px', height: '35px', borderRadius: '4px', transition: 'all 0.2s' }}
-                            onMouseEnter={(e) => { e.target.style.background = '#e4e6ea'; e.target.style.borderColor = '#3b82f6'; }}
-                            onMouseLeave={(e) => { e.target.style.background = '#f0f1f3'; e.target.style.borderColor = '#e4e6ea'; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#e4e6ea'; e.currentTarget.style.borderColor = '#3b82f6'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f1f3'; e.currentTarget.style.borderColor = '#e4e6ea'; }}
                           >
                             <i className="fas fa-eye" style={{ fontSize: '18px' }}></i>
                           </button>
                           <button
                             onClick={async () => {
                               try {
-                                const res = await fetch(`/api/asistencia/registros/${registro.fecha}`, { credentials: 'include' });
+                                // 6. Ajustado fetch interno de impresión con la URL Base externa
+                                const res = await fetch(`${API_BASE_URL}/api/asistencia/registros/${registro.fecha}`, { credentials: 'include' });
                                 if (res.ok) {
                                   const personas = await res.json();
                                   generarPDF(registro.fecha, personas);
@@ -377,8 +373,8 @@ export default function ListadoAsistencias() {
                             }}
                             title="Imprimir"
                             style={{ background: '#f0f1f3', border: '1px solid #e4e6ea', cursor: 'pointer', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9098a3', width: '35px', height: '35px', borderRadius: '4px', transition: 'all 0.2s' }}
-                            onMouseEnter={(e) => { e.target.style.background = '#e4e6ea'; }}
-                            onMouseLeave={(e) => { e.target.style.background = '#f0f1f3'; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#e4e6ea'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f1f3'; }}
                           >
                             <i className="fas fa-print" style={{ fontSize: '18px' }}></i>
                           </button>
@@ -386,8 +382,8 @@ export default function ListadoAsistencias() {
                             onClick={() => handleBorrar(registro.fecha, registro.fecha, `Registro de ${registro.fecha}`)}
                             title="Borrar registro"
                             style={{ background: '#f0f1f3', border: '1px solid #e4e6ea', cursor: 'pointer', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', width: '35px', height: '35px', borderRadius: '4px', transition: 'all 0.2s' }}
-                            onMouseEnter={(e) => { e.target.style.background = '#fee2e2'; e.target.style.borderColor = '#ef4444'; }}
-                            onMouseLeave={(e) => { e.target.style.background = '#f0f1f3'; e.target.style.borderColor = '#e4e6ea'; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.borderColor = '#ef4444'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f1f3'; e.currentTarget.style.borderColor = '#e4e6ea'; }}
                           >
                             <i className="fas fa-trash" style={{ fontSize: '18px' }}></i>
                           </button>
@@ -436,14 +432,12 @@ export default function ListadoAsistencias() {
                           </div>
                           
                           <div style={{ background: '#f4f5f7', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e4e6ea' }}>
-                            {/* Headers */}
                             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px', padding: '12px 16px', background: '#fff', borderBottom: '2px solid #e4e6ea', fontWeight: '600', fontSize: '12px', color: '#555b66', textTransform: 'uppercase' }}>
                               <div>Nombre</div>
                               <div style={{ textAlign: 'center' }}>Número</div>
                               <div style={{ textAlign: 'center' }}>Género</div>
                             </div>
                             
-                            {/* Filas */}
                             {personasGrupo.map((persona, idx) => (
                               <div key={persona.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px', padding: '12px 16px', borderBottom: idx < personasGrupo.length - 1 ? '1px solid #e4e6ea' : 'none', fontSize: '14px', color: '#1a1a1a', background: idx % 2 === 0 ? '#fff' : '#f9f9fb' }}>
                                 <div>{persona.nombre_completo}</div>

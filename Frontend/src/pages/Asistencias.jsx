@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { logout } from '../utils/auth';
 import '../styles/asistencias.css';
 
+// 1. Definir la URL base del backend dinámicamente
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? ''
+  : 'https://iglesia-rema-backend.onrender.com';
+
 const GRUPOS = ['Niños', 'Jóvenes', 'Adultos'];
 const COLORES = {
   'Niños': '#3b82f6',
@@ -26,7 +31,8 @@ export default function Asistencias() {
   useEffect(() => {
     const iniciar = async () => {
       try {
-        const response = await fetch('/api/session', { credentials: 'include' });
+        // 2. Ajustado fetch de sesión con la URL Base externa
+        const response = await fetch(`${API_BASE_URL}/api/session`, { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setSession(data);
@@ -42,7 +48,8 @@ export default function Asistencias() {
       }
 
       try {
-        const res = await fetch('/api/asistencia', { credentials: 'include' });
+        // 3. Ajustado fetch de listado de asistencia inicial con la URL Base externa
+        const res = await fetch(`${API_BASE_URL}/api/asistencia`, { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setPersonas(data);
@@ -84,14 +91,15 @@ export default function Asistencias() {
     if (!personaBorrar) return;
 
     try {
-      const res = await fetch(`/api/asistencia/${personaBorrar.id}`, {
+      // 4. Ajustado fetch de eliminación (DELETE) con la URL Base externa
+      const res = await fetch(`${API_BASE_URL}/api/asistencia/${personaBorrar.id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
 
       if (res.ok) {
-        // Recargar lista de personas
-        const resPersonas = await fetch('/api/asistencia', { credentials: 'include' });
+        // 5. Ajustado fetch de recarga tras eliminación con la URL Base externa
+        const resPersonas = await fetch(`${API_BASE_URL}/api/asistencia`, { credentials: 'include' });
         if (resPersonas.ok) {
           setPersonas(await resPersonas.json());
         }
@@ -137,7 +145,8 @@ export default function Asistencias() {
 
       // Guardar asistencias en BD si hay alguna marcada
       if (asistenciasARegistrar.length > 0) {
-        const resRegistro = await fetch('/api/asistencia/registrar', {
+        // 6. Ajustado fetch de registro (POST) con la URL Base externa
+        const resRegistro = await fetch(`${API_BASE_URL}/api/asistencia/registrar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
