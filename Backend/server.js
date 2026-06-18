@@ -12,6 +12,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000; // Permitir que la nube asigne el puerto automáticamente
 
 // Configuración de la base de datos PostgreSQL
