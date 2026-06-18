@@ -5,6 +5,11 @@ import ConfirmModal from "../components/ConfirmModal";
 import Alert from "../components/Alert";
 import "../styles/admin.css";
 
+// 🌐 CONFIGURACIÓN DE URL PARA ENTORNO DE PRODUCCIÓN Y LOCAL
+const API_BASE_URL = window.location.hostname === "localhost" 
+  ? "" 
+  : "https://iglesia-rema-backend.onrender.com";
+
 function PersonasRegistradas() {
   const navigate = useNavigate();
   const [personas, setPersonas] = useState([]);
@@ -21,17 +26,18 @@ function PersonasRegistradas() {
     // Cargar usuario actual y personas del backend
     const cargarDatos = async () => {
       try {
-        // Obtener usuario autenticado
-        const authRes = await fetch("/api/auth", {
+        // CORRECCIÓN 1: Obtener usuario autenticado apuntando a Render (Cambiado /api/auth por /api/session para mantener consistencia)
+        const authRes = await fetch(`${API_BASE_URL}/api/session`, {
           credentials: "include",
         });
         if (authRes.ok) {
           const authData = await authRes.json();
-          setUsuarioActual(authData.user);
+          // Tu backend devuelve el objeto de usuario directamente en data
+          setUsuarioActual(authData);
         }
 
-        // Cargar personas
-        const res = await fetch("/api/personas", {
+        // CORRECCIÓN 2: Cargar personas apuntando a Render
+        const res = await fetch(`${API_BASE_URL}/api/personas`, {
           credentials: "include",
         });
         if (!res.ok) throw new Error("Error al cargar personas");
@@ -57,10 +63,8 @@ function PersonasRegistradas() {
   };
 
   const handleEditar = (id) => {
-    // Obtener la persona que se intenta editar
     const persona = personas.find(p => p.id === id);
     
-    // Verificar si es el usuario autenticado
     if (usuarioActual && usuarioActual.id === id) {
       addAlert({
         type: "warning",
@@ -74,10 +78,8 @@ function PersonasRegistradas() {
   };
 
   const handleEliminar = (id) => {
-    // Obtener la persona que se intenta eliminar
     const persona = personas.find(p => p.id === id);
     
-    // Verificar si es el usuario autenticado
     if (usuarioActual && usuarioActual.id === id) {
       addAlert({
         type: "danger",
@@ -103,7 +105,8 @@ function PersonasRegistradas() {
   const confirmDelete = () => {
     setDeleting(true);
     
-    fetch(`/api/personas/${personaToDelete}`, {
+    // CORRECCIÓN 3: Petición DELETE apuntando a Render
+    fetch(`${API_BASE_URL}/api/personas/${personaToDelete}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json"
