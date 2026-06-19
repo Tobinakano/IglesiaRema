@@ -11,11 +11,12 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Label,
-  LineChart,
-  Line
+  Label
 } from 'recharts';
 import '../styles/graficas.css';
+
+// URL del Backend en Render basada en tus capturas de pantalla
+const API_URL = 'https://iglesia-rema-backend.onrender.com';
 
 export default function Graficas() {
   const navigate = useNavigate();
@@ -40,12 +41,14 @@ export default function Graficas() {
   useEffect(() => {
     const iniciar = async () => {
       try {
-        const response = await fetch('/api/session', { credentials: 'include' });
+        // Corrección 1: Ruta absoluta para la sesión con API_URL
+        const response = await fetch(`${API_URL}/api/session`, { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setSession(data);
-          if (data.rol !== 'Asistencias') {
+          if (data.rol !== 'Asistencias' && data.rol !== 'Administrador') {
             navigate('/admin');
+            return;
           }
         } else {
           navigate('/login');
@@ -58,14 +61,14 @@ export default function Graficas() {
       }
 
       try {
-        // Cargar datos de todos los meses
         const mesesData = {};
         const mesesNombresArray = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         
         for (let mes = 1; mes <= 12; mes++) {
           const mesStr = String(mes).padStart(2, '0');
-          const resGraficas = await fetch(`/api/asistencia/graficas/${anoActual}-${mesStr}`, { credentials: 'include' });
+          // Corrección 2: Ruta absoluta para las métricas mensuales con API_URL
+          const resGraficas = await fetch(`${API_URL}/api/asistencia/graficas/${anoActual}-${mesStr}`, { credentials: 'include' });
           if (resGraficas.ok) {
             const datos = await resGraficas.json();
             const datosTransformados = datos.map(item => {
@@ -78,8 +81,8 @@ export default function Graficas() {
               return {
                 ...item,
                 adultos: item.adultos || 0,
-                jovenes: item.jóvenes || 0,
-                ninos: item.niños || 0,
+                jovenes: item.jóvenes || item.jovenes || 0,
+                ninos: item.niños || item.ninos || 0,
                 diaLabel: diaLabel,
                 mes: fecha.getMonth() + 1
               };
@@ -118,21 +121,21 @@ export default function Graficas() {
     };
     
     iniciar();
-  }, [navigate]);
+  }, [navigate, mesActual, anoActual]);
 
   useEffect(() => {
-    // Actualizar chartData cuando cambia selectedMonth
     if (selectedMonth && allMonthsData[selectedMonth]) {
       setChartData(allMonthsData[selectedMonth]);
     } else if (mesActual && allMonthsData[mesActual]) {
       setChartData(allMonthsData[mesActual]);
+    } else {
+      setChartData([]);
     }
   }, [selectedMonth, allMonthsData, mesActual]);
 
-  // Escuchar cambios en localStorage para comandos de gráficas desde el ChatBot
+  // Sincronización con ChatBot de Gráficas
   useEffect(() => {
     const handleStorageChange = (event) => {
-      // Solo procesar si la clave es 'chatBotGraphicRequest'
       if (event.key !== 'chatBotGraphicRequest') return;
       
       const graphicRequest = localStorage.getItem('chatBotGraphicRequest');
@@ -140,47 +143,36 @@ export default function Graficas() {
 
       try {
         const grafica = JSON.parse(graphicRequest);
-        console.log('📊 Solicitud de gráfica recibida:', grafica);
-        
-        // Generar ID único para esta solicitud
         const requestId = Date.now();
         localStorage.setItem('graphicProcessing', requestId.toString());
 
         if (grafica.tipo === 'mensual' && grafica.datos && grafica.datos.length > 0) {
-          // Actualizar gráfica mensual
           const datosDelMes = grafica.datos.map(item => ({
             diaLabel: new Date(item.dia).getDate().toString(),
             adultos: item.adultos || 0,
             jovenes: item.jovenes || 0,
             ninos: item.ninos || 0
           }));
-          console.log('📅 Datos del mes actualizados:', datosDelMes);
           setChartData(datosDelMes);
-          
-          // Actualizar mes seleccionado
           if (grafica.mes) {
             setSelectedMonth(grafica.mes);
           }
         } else if ((grafica.tipo === 'anual' || grafica.tipo === 'circular') && grafica.datos) {
-          // Actualizar gráfica anual/circular
           const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
           const datosAnuales = grafica.datos.map(item => ({
             mes: meses[parseInt(item.mes) - 1],
             visitantes: item.total || 0
           }));
-          console.log('📈 Datos anuales actualizados:', datosAnuales);
           setMonthlyVisits(datosAnuales);
         }
         
-        // Confirmar procesamiento
         setTimeout(() => {
           const currentId = localStorage.getItem('graphicProcessing');
           if (currentId === requestId.toString()) {
             localStorage.setItem('graphicUpdatedConfirm', 'true');
             localStorage.removeItem('chatBotGraphicRequest');
             localStorage.removeItem('graphicProcessing');
-            console.log('✅ Gráfica actualizada exitosamente');
           }
         }, 300);
         
@@ -191,17 +183,11 @@ export default function Graficas() {
       }
     };
 
-    // Escuchar cambios en storage desde otras pestañas
     window.addEventListener('storage', handleStorageChange);
-
-    // También escuchar evento personalizado
     const handleCustomEvent = () => {
       const graphicRequest = localStorage.getItem('chatBotGraphicRequest');
-      if (graphicRequest) {
-        handleStorageChange({ key: 'chatBotGraphicRequest' });
-      }
+      if (graphicRequest) handleStorageChange({ key: 'chatBotGraphicRequest' });
     };
-
     window.addEventListener('chatBotGraphicUpdate', handleCustomEvent);
 
     return () => {
@@ -221,17 +207,13 @@ export default function Graficas() {
 
   const descargarGrafica = async (ref, nombre) => {
     if (!ref.current) return;
-    
     try {
       const canvas = await html2canvas(ref.current, {
         backgroundColor: '#ffffff',
         scale: 2,
         logging: false,
         useCORS: true,
-        // Filtra directamente por el tipo de etiqueta HTML
-        ignoreElements: (elemento) => {
-          return elemento.tagName === 'BUTTON'; 
-        }
+        ignoreElements: (elemento) => elemento.tagName === 'BUTTON'
       });
       
       const imagen = canvas.toDataURL('image/jpeg', 0.95);
@@ -242,18 +224,17 @@ export default function Graficas() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error descargando gráfica:', error);
-      alert('Error al descargar la gráfica');
+      console.error('Error descargar gráfica:', error);
     }
   };
 
-  if (!session || loading) return <div className="graficas-loading">Cargando...</div>;
+  if (!session || loading) return <div className="graficas-loading">Cargando métricas...</div>;
 
   return (
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <img className="sidebar-logo" src="/favicon.png" alt="Logo Iglesia Remanente Cali" />
+          <img className="sidebar-logo" src="/favicon.png" alt="Logo" />
           <div className="sidebar-brand-text">
             <span className="sidebar-brand-name">Remanente</span>
             <span className="sidebar-brand-sub">Cali</span>
@@ -262,16 +243,13 @@ export default function Graficas() {
         <span className="sidebar-label">Menú</span>
         <nav className="sidebar-nav">
           <a href="/asistencia/listado" className="nav-item">
-            <i className="fas fa-check-square"></i>
-            Registrar Asistencias
+            <i className="fas fa-check-square"></i> Registrar Asistencias
           </a>
           <a href="/asistencia/registros" className="nav-item">
-            <i className="fas fa-clipboard-list"></i>
-            Listado de Registros
+            <i className="fas fa-clipboard-list"></i> Listado de Registros
           </a>
           <a href="/asistencia/graficas" className="nav-item active">
-            <i className="fas fa-chart-bar"></i>
-            Gráficas
+            <i className="fas fa-chart-bar"></i> Gráficas
           </a>
         </nav>
         <div className="sidebar-footer">
@@ -281,7 +259,7 @@ export default function Graficas() {
             </div>
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{session.nombre}</div>
-              <div className="sidebar-user-role">Asistencias · Remanente</div>
+              <div className="sidebar-user-role">{session.rol} · Remanente</div>
             </div>
           </div>
         </div>
@@ -290,29 +268,18 @@ export default function Graficas() {
       <header className="navbar">
         <div style={{ flex: 1 }}></div>
         <div className="graficas-navbar-right">
-          <div 
-            className="user-avatar graficas-user-avatar"
-            title="Mi perfil"
-            onClick={() => setShowUserMenu(!showUserMenu)}
-          >
+          <div className="user-avatar graficas-user-avatar" onClick={() => setShowUserMenu(!showUserMenu)}>
             {session.nombre ? session.nombre[0].toUpperCase() : 'A'}
           </div>
-          
           {showUserMenu && (
             <div className="graficas-user-menu">
               <div className="graficas-user-menu-content">
                 <a href="#" className="graficas-user-menu-item">
-                  <i className="fas fa-user graficas-user-menu-icon"></i>
-                  <span>Mi Perfil</span>
-                </a>
-                <a href="#" className="graficas-user-menu-item">
-                  <i className="fas fa-gear graficas-user-menu-icon"></i>
-                  <span>Configuración</span>
+                  <i className="fas fa-user graficas-user-menu-icon"></i> <span>Mi Perfil</span>
                 </a>
                 <div className="graficas-user-menu-divider"></div>
                 <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }} className="graficas-user-menu-item danger">
-                  <i className="fas fa-arrow-right-from-bracket graficas-user-menu-icon"></i>
-                  <span>Cerrar Sesión</span>
+                  <i className="fas fa-arrow-right-from-bracket graficas-user-menu-icon"></i> <span>Cerrar Sesión</span>
                 </a>
               </div>
             </div>
@@ -329,30 +296,15 @@ export default function Graficas() {
         </div>
 
         <div className="graficas-empty-container" ref={chartMonthRef}>
-          <div style={{ paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+          <div style={{ paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button
                 onClick={() => {
-                  const nuevoMes = selectedMonth ? selectedMonth - 1 : mesActual - 1;
-                  if (nuevoMes >= 1) {
-                    setSelectedMonth(nuevoMes);
-                    const datosDelMes = Object.values(chartData).length > 0 
-                      ? chartData 
-                      : [];
-                  }
+                  const base = selectedMonth !== null ? selectedMonth : mesActual;
+                  if (base > 1) setSelectedMonth(base - 1);
                 }}
-                style={{
-                  padding: '6px 10px',
-                  backgroundColor: '#e5e7eb',
-                  color: '#333',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: '500'
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#d1d5db'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#e5e7eb'}
+                className="btn-mes"
+                style={{ padding: '6px 10px', backgroundColor: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
               >
                 ← Anterior
               </button>
@@ -361,68 +313,28 @@ export default function Graficas() {
               </span>
               <button
                 onClick={() => {
-                  const nuevoMes = selectedMonth ? selectedMonth + 1 : mesActual + 1;
-                  if (nuevoMes <= 12) {
-                    setSelectedMonth(nuevoMes);
-                  }
+                  const base = selectedMonth !== null ? selectedMonth : mesActual;
+                  if (base < 12) setSelectedMonth(base + 1);
                 }}
-                style={{
-                  padding: '6px 10px',
-                  backgroundColor: '#e5e7eb',
-                  color: '#333',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: '500'
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#d1d5db'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#e5e7eb'}
+                className="btn-mes"
+                style={{ padding: '6px 10px', backgroundColor: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
               >
                 Siguiente →
               </button>
             </div>
-            <button 
-              onClick={() => descargarGrafica(chartMonthRef, mesNombre)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                backgroundColor: '#3b82f6',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: '500'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
-              onMouseOut={(e) => e.target.style.backgroundColor = '#3b82f6'}
-            >
-              <i className="fas fa-download" style={{ fontSize: '13px' }}></i>
-              Descargar
+            <button onClick={() => descargarGrafica(chartMonthRef, mesNombre)} style={{ padding: '8px 14px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              <i className="fas fa-download"></i> Descargar
             </button>
           </div>
 
           <div style={{ height: '400px', width: '100%' }}>
-            {chartData.length > 0 ? (
+            {chartData && chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e4e6ea" />
-                  <XAxis 
-                    dataKey="diaLabel" 
-                    label={{ value: 'Fechas de Registro', position: 'insideBottomRight', offset: -10 }}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis 
-                    label={{ value: 'Cantidad de Personas', angle: -90, position: 'insideLeft' }}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e4e6ea', borderRadius: '8px' }}
-                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-                  />
+                  <XAxis dataKey="diaLabel" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e4e6ea', borderRadius: '8px' }} />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="square" />
                   <Bar dataKey="adultos" name="Adultos" fill="#10b981" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="jovenes" name="Jóvenes" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
@@ -442,28 +354,8 @@ export default function Graficas() {
             <span style={{ fontSize: '17px', color: '#666', fontWeight: '500' }}>
               Visitas del año {anoActual}
             </span>
-            <button 
-              onClick={() => descargarGrafica(chartYearRef, 'anual')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                backgroundColor: '#3b82f6',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: '500',
-                position: 'absolute',
-                right: 0
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
-              onMouseOut={(e) => e.target.style.backgroundColor = '#3b82f6'}
-            >
-              <i className="fas fa-download" style={{ fontSize: '13px' }}></i>
-              Descargar
+            <button onClick={() => descargarGrafica(chartYearRef, 'anual')} style={{ position: 'absolute', right: 0, padding: '8px 14px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              <i className="fas fa-download"></i> Descargar
             </button>
           </div>
 
@@ -472,26 +364,11 @@ export default function Graficas() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyVisits} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e4e6ea" />
-                  <XAxis 
-                    dataKey="mes" 
-                    label={{ value: 'Meses', position: 'insideBottomRight', offset: -10 }}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis 
-                    label={{ value: 'Total de Personas', angle: -90, position: 'insideLeft' }}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e4e6ea', borderRadius: '8px' }}
-                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-                  />
+                  <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e4e6ea', borderRadius: '8px' }} />
                   <Bar dataKey="visitantes" name="Total de Visitantes" fill="#8b5cf6" radius={[4, 4, 0, 0]}>
-                    <Label 
-                      dataKey="visitantes"
-                      position="top"
-                      fill="#1F2937"
-                      fontSize={12}
-                    />
+                    <Label dataKey="visitantes" position="top" fill="#1F2937" fontSize={12} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
