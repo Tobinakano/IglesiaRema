@@ -10,6 +10,9 @@ const COLORES = {
   'Adultos': '#10b981'
 };
 
+// URL absoluta de tu Backend en Render
+const API_URL = 'https://iglesia-rema-backend.onrender.com';
+
 export default function EditarAsistencia() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -33,32 +36,44 @@ export default function EditarAsistencia() {
   useEffect(() => {
     const iniciar = async () => {
       try {
-        const response = await fetch('/api/session', { credentials: 'include' });
+        // Corrección 1: Validación de sesión apuntando a Render
+        const response = await fetch(`${API_URL}/api/session`, { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setSession(data);
           if (data.rol !== 'Asistencias' && data.rol !== 'Administrador') {
             navigate('/admin');
+            return;
           }
         } else {
           navigate('/login');
+          return;
         }
       } catch (error) {
         console.error('Session check error:', error);
         navigate('/login');
+        return;
       }
 
       // Cargar datos de la persona
       try {
-        const res = await fetch(`/api/asistencia/${id}`, { credentials: 'include' });
+        // Corrección 2: Petición de datos del miembro por ID apuntando a Render
+        const res = await fetch(`${API_URL}/api/asistencia/${id}`, { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
+          
+          // Formatear fecha para el input type="date" si viene con formato ISO completo
+          let fechaFormateada = data.fecha_nacimiento || '';
+          if (fechaFormateada.includes('T')) {
+            fechaFormateada = fechaFormateada.split('T')[0];
+          }
+
           setFormData({
             nombre_completo: data.nombre_completo || '',
             numero: data.numero || '',
             sexo: data.sexo || 'M',
             grupo: data.grupo || 'Jóvenes',
-            fecha_nacimiento: data.fecha_nacimiento || '',
+            fecha_nacimiento: fechaFormateada,
             direccion: data.direccion || '',
             barrio: data.barrio || ''
           });
@@ -103,13 +118,14 @@ export default function EditarAsistencia() {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/asistencia/${id}`, {
+      // Corrección 3: Envío de la actualización vía PUT apuntando a Render
+      const res = await fetch(`${API_URL}/api/asistencia/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           nombre_completo: formData.nombre_completo.trim(),
-          numero: parseInt(formData.numero),
+          numero: parseInt(formData.numero, 10),
           sexo: formData.sexo,
           grupo: formData.grupo,
           fecha_nacimiento: formData.fecha_nacimiento || null,
@@ -168,7 +184,7 @@ export default function EditarAsistencia() {
             </div>
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{session.nombre}</div>
-              <div className="sidebar-user-role">Asistencias · Remanente</div>
+              <div className="sidebar-user-role">{session.rol} · Remanente</div>
             </div>
           </div>
         </div>
