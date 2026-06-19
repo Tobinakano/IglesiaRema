@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import '../styles/graficas.css';
 
-// URL del Backend en Render basada en tus capturas de pantalla
+// URL del Backend en Render basada en tus configuraciones de red
 const API_URL = 'https://iglesia-rema-backend.onrender.com';
 
 export default function Graficas() {
@@ -41,11 +41,12 @@ export default function Graficas() {
   useEffect(() => {
     const iniciar = async () => {
       try {
-        // Corrección 1: Ruta absoluta para la sesión con API_URL
+        // Validar sesión usando la URL absoluta del backend
         const response = await fetch(`${API_URL}/api/session`, { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setSession(data);
+          // Permitir acceso a Asistencias y Administradores
           if (data.rol !== 'Asistencias' && data.rol !== 'Administrador') {
             navigate('/admin');
             return;
@@ -65,29 +66,43 @@ export default function Graficas() {
         const mesesNombresArray = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         
+        // Consultar los 12 meses del año
         for (let mes = 1; mes <= 12; mes++) {
           const mesStr = String(mes).padStart(2, '0');
-          // Corrección 2: Ruta absoluta para las métricas mensuales con API_URL
           const resGraficas = await fetch(`${API_URL}/api/asistencia/graficas/${anoActual}-${mesStr}`, { credentials: 'include' });
+          
           if (resGraficas.ok) {
-            const datos = await resGraficas.json();
-            const datosTransformados = datos.map(item => {
-              const fecha = new Date(item.fecha + 'T00:00:00');
-              const diaLabel = fecha.toLocaleDateString('es-ES', { 
-                day: 'numeric',
-                month: 'short'
-              });
+            // Verificar si el tipo de contenido recibido es JSON válido para evitar romper la app con HTMLs de error
+            const contentType = resGraficas.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const datos = await resGraficas.json();
               
-              return {
-                ...item,
-                adultos: item.adultos || 0,
-                jovenes: item.jóvenes || item.jovenes || 0,
-                ninos: item.niños || item.ninos || 0,
-                diaLabel: diaLabel,
-                mes: fecha.getMonth() + 1
-              };
-            });
-            mesesData[mes] = datosTransformados;
+              if (Array.isArray(datos)) {
+                const datosTransformados = datos.map(item => {
+                  const fecha = new Date(item.fecha + 'T00:00:00');
+                  const diaLabel = fecha.toLocaleDateString('es-ES', { 
+                    day: 'numeric',
+                    month: 'short'
+                  });
+                  
+                  return {
+                    ...item,
+                    adultos: Number(item.adultos) || 0,
+                    jovenes: Number(item.jovenes) || Number(item.jóvenes) || 0,
+                    ninos: Number(item.ninos) || Number(item.niños) || 0,
+                    diaLabel: diaLabel,
+                    mes: fecha.getMonth() + 1
+                  };
+                });
+                mesesData[mes] = datosTransformados;
+              } else {
+                mesesData[mes] = [];
+              }
+            } else {
+              mesesData[mes] = [];
+            }
+          } else {
+            mesesData[mes] = [];
           }
         }
         
@@ -95,7 +110,7 @@ export default function Graficas() {
         const datosDelMesActual = mesesData[mesActual] || [];
         setChartData(datosDelMesActual);
 
-        // Procesar datos anuales
+        // Inicializar estructura limpia para datos anuales
         const mesesDataAnual = {};
         mesesNombresArray.forEach((nombre, index) => {
           mesesDataAnual[index + 1] = {
@@ -104,11 +119,20 @@ export default function Graficas() {
           };
         });
 
-        Object.values(mesesData).forEach((datosDelMes, mesIndex) => {
-          datosDelMes.forEach(item => {
-            const totalPersonas = (item.adultos || 0) + (item.jovenes || 0) + (item.ninos || 0);
-            mesesDataAnual[mesIndex + 1].visitantes += totalPersonas;
-          });
+        // Nueva lógica de acumulación segura con tipado numérico estricto
+        Object.keys(mesesData).forEach((mesKey) => {
+          const datosDelMes = mesesData[mesKey];
+          
+          if (Array.isArray(datosDelMes)) {
+            datosDelMes.forEach(item => {
+              const adultos = Number(item.adultos) || 0;
+              const jovenes = Number(item.jovenes) || Number(item.jóvenes) || 0;
+              const ninos = Number(item.ninos) || Number(item.niños) || 0;
+              
+              const totalPersonas = adultos + jovenes + ninos;
+              mesesDataAnual[mesKey].visitantes += totalPersonas;
+            });
+          }
         });
 
         const visitasAnuales = Object.values(mesesDataAnual);
@@ -133,7 +157,7 @@ export default function Graficas() {
     }
   }, [selectedMonth, allMonthsData, mesActual]);
 
-  // Sincronización con ChatBot de Gráficas
+  // Sincronización con comandos del ChatBot / LocalStorage
   useEffect(() => {
     const handleStorageChange = (event) => {
       if (event.key !== 'chatBotGraphicRequest') return;
@@ -149,9 +173,9 @@ export default function Graficas() {
         if (grafica.tipo === 'mensual' && grafica.datos && grafica.datos.length > 0) {
           const datosDelMes = grafica.datos.map(item => ({
             diaLabel: new Date(item.dia).getDate().toString(),
-            adultos: item.adultos || 0,
-            jovenes: item.jovenes || 0,
-            ninos: item.ninos || 0
+            adultos: Number(item.adultos) || 0,
+            jovenes: Number(item.jovenes) || 0,
+            ninos: Number(item.ninos) || 0
           }));
           setChartData(datosDelMes);
           if (grafica.mes) {
@@ -161,8 +185,8 @@ export default function Graficas() {
           const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
           const datosAnuales = grafica.datos.map(item => ({
-            mes: meses[parseInt(item.mes) - 1],
-            visitantes: item.total || 0
+            mes: meses[parseInt(item.mes, 10) - 1],
+            visitantes: Number(item.total) || 0
           }));
           setMonthlyVisits(datosAnuales);
         }
@@ -224,7 +248,7 @@ export default function Graficas() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error descargar gráfica:', error);
+      console.error('Error al descargar la gráfica:', error);
     }
   };
 
@@ -234,7 +258,7 @@ export default function Graficas() {
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <img className="sidebar-logo" src="/favicon.png" alt="Logo" />
+          <img className="sidebar-logo" src="/favicon.png" alt="Logo Iglesia Remanente" />
           <div className="sidebar-brand-text">
             <span className="sidebar-brand-name">Remanente</span>
             <span className="sidebar-brand-sub">Cali</span>
@@ -295,6 +319,7 @@ export default function Graficas() {
           </div>
         </div>
 
+        {/* CONTENEDOR GRÁFICA MENSUAL */}
         <div className="graficas-empty-container" ref={chartMonthRef}>
           <div style={{ paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -303,8 +328,7 @@ export default function Graficas() {
                   const base = selectedMonth !== null ? selectedMonth : mesActual;
                   if (base > 1) setSelectedMonth(base - 1);
                 }}
-                className="btn-mes"
-                style={{ padding: '6px 10px', backgroundColor: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ padding: '6px 10px', backgroundColor: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
               >
                 ← Anterior
               </button>
@@ -316,13 +340,12 @@ export default function Graficas() {
                   const base = selectedMonth !== null ? selectedMonth : mesActual;
                   if (base < 12) setSelectedMonth(base + 1);
                 }}
-                className="btn-mes"
-                style={{ padding: '6px 10px', backgroundColor: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ padding: '6px 10px', backgroundColor: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
               >
                 Siguiente →
               </button>
             </div>
-            <button onClick={() => descargarGrafica(chartMonthRef, mesNombre)} style={{ padding: '8px 14px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            <button onClick={() => descargarGrafica(chartMonthRef, mesNombre)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
               <i className="fas fa-download"></i> Descargar
             </button>
           </div>
@@ -349,12 +372,13 @@ export default function Graficas() {
           </div>
         </div>
 
+        {/* CONTENEDOR GRÁFICA ANUAL */}
         <div className="graficas-empty-container" style={{ marginTop: '40px' }} ref={chartYearRef}>
           <div style={{ paddingBottom: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
             <span style={{ fontSize: '17px', color: '#666', fontWeight: '500' }}>
               Visitas del año {anoActual}
             </span>
-            <button onClick={() => descargarGrafica(chartYearRef, 'anual')} style={{ position: 'absolute', right: 0, padding: '8px 14px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            <button onClick={() => descargarGrafica(chartYearRef, 'anual')} style={{ position: 'absolute', right: 0, display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
               <i className="fas fa-download"></i> Descargar
             </button>
           </div>
