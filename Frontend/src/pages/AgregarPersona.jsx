@@ -10,6 +10,11 @@ const COLORES = {
   'Adultos': '#10b981'
 };
 
+// URL Dinámica según el entorno
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:4000'
+  : 'https://iglesia-rema-backend.onrender.com';
+
 export default function AgregarPersona() {
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
@@ -31,7 +36,8 @@ export default function AgregarPersona() {
   useEffect(() => {
     const iniciar = async () => {
       try {
-        const response = await fetch('/api/session', { credentials: 'include' });
+        // CORRECCIÓN: Se añade API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/api/session`, { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setSession(data);
@@ -76,7 +82,8 @@ export default function AgregarPersona() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/asistencia', {
+      // CORRECCIÓN: Se añade API_BASE_URL
+      const res = await fetch(`${API_BASE_URL}/api/asistencia`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
