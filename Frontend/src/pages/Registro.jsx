@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "../utils/auth";
 import "../styles/admin.css";
 
+// URL absoluta de tu Backend en Render
+const API_URL = 'https://iglesia-rema-backend.onrender.com';
+
 function Registro() {
   const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -19,11 +22,11 @@ function Registro() {
     rol: "Administrador"
   });
 
-  // Obtener usuario autenticado
+  // Obtener usuario autenticado apuntando al backend en Render
   useEffect(() => {
     const obtenerUsuario = async () => {
       try {
-        const res = await fetch("/api/auth", {
+        const res = await fetch(`${API_URL}/api/auth`, {
           credentials: "include",
         });
         if (res.ok) {
@@ -31,7 +34,7 @@ function Registro() {
           setUsuarioActual(data.user);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error al obtener sesión:", err);
       }
     };
     obtenerUsuario();
@@ -55,31 +58,42 @@ function Registro() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
     setLoading(true);
 
     // Validar que los campos no estén vacíos
-    if (!formData.nombre || !formData.apellido || !formData.usuario || !formData.contrasena) {
+    if (!formData.nombre.trim() || !formData.apellido.trim() || !formData.usuario.trim() || !formData.contrasena) {
       setError("Todos los campos son requeridos");
       setLoading(false);
       return;
     }
 
-    // Enviar al backend
-    fetch("/api/personas", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify(formData)
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.ok) {
+    try {
+      // Envío de datos de registro apuntando a Render
+      const res = await fetch(`${API_URL}/api/personas`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          nombre: formData.nombre.trim(),
+          apellido: formData.apellido.trim(),
+          usuario: formData.usuario.trim(),
+          contrasena: formData.contrasena,
+          rol: formData.rol
+        })
+      });
+
+      // Validar primero si el contenido que regresa el servidor es un JSON real
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
           setSuccess("Usuario registrado exitosamente");
           // Limpiar formulario
           setFormData({
@@ -96,14 +110,16 @@ function Registro() {
         } else {
           setError(data.error || "Error al registrar el usuario");
         }
-      })
-      .catch(err => {
-        setError("Error de conexión con el servidor");
-        console.error(err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      } else {
+        // En caso de que falle la ruta o devuelva un HTML de error
+        setError("El servidor no devolvió una respuesta válida. Inténtalo más tarde.");
+      }
+    } catch (err) {
+      setError("Error de conexión con el servidor");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
