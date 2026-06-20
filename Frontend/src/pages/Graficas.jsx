@@ -15,8 +15,10 @@ import {
 } from 'recharts';
 import '../styles/graficas.css';
 
-// URL del Backend en Render basada en tus configuraciones de red
-const API_URL = 'https://iglesia-rema-backend.onrender.com';
+// URL dinámica según el entorno
+const API_URL = window.location.hostname === 'localhost'
+  ? ''
+  : 'https://iglesia-rema-backend.onrender.com';
 
 export default function Graficas() {
   const navigate = useNavigate();

@@ -1,9 +1,12 @@
 // utils/auth.js
 
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? ''
+  : 'https://iglesia-rema-backend.onrender.com';
+
 export async function checkAuth() {
   try {
-    // CAMBIADO: Ahora apunta directamente al servidor real de Render
-    const res = await fetch('https://iglesia-rema-backend.onrender.com/api/session', {
+    const res = await fetch(`${API_BASE_URL}/api/session`, {
       method: 'GET',
       credentials: 'include', // Mantiene la cookie activa cruzada
       headers: {
@@ -27,8 +30,7 @@ export async function checkAuth() {
 
 export async function logout() {
   try {
-    // CAMBIADO: Apunta al endpoint de logout en Render
-    const res = await fetch('https://iglesia-rema-backend.onrender.com/api/logout', {
+    const res = await fetch(`${API_BASE_URL}/api/logout`, {
       method: 'POST',
       credentials: 'include',
     });

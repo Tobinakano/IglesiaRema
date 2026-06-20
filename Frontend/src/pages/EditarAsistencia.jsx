@@ -10,8 +10,10 @@ const COLORES = {
   'Adultos': '#10b981'
 };
 
-// URL absoluta de tu Backend en Render
-const API_URL = 'https://iglesia-rema-backend.onrender.com';
+// URL dinámica según el entorno
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:4000'
+  : 'https://iglesia-rema-backend.onrender.com';
 
 export default function EditarAsistencia() {
   const navigate = useNavigate();

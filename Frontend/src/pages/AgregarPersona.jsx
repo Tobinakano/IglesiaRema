@@ -12,7 +12,7 @@ const COLORES = {
 
 // URL Dinámica según el entorno
 const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:4000'
+  ? ''
   : 'https://iglesia-rema-backend.onrender.com';
 
 export default function AgregarPersona() {

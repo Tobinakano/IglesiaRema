@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "../utils/auth";
 import "../styles/admin.css";
 
-// URL absoluta de tu Backend en Render
-const API_URL = 'https://iglesia-rema-backend.onrender.com';
+// URL dinámica según el entorno
+const API_URL = window.location.hostname === 'localhost'
+  ? ''
+  : 'https://iglesia-rema-backend.onrender.com';
 
 function Registro() {
   const navigate = useNavigate();
