@@ -9,15 +9,8 @@ function Inicio() {
 
       <section className="hero">
         <div className="hero-bg"></div>
-
-        <div className="hero-content">
-          <h1 className="hero-title">
-            <img src={flayerRema} alt="Flayer Rema" className="hero-flayer-img" />
-          </h1>
-
-          <p className="hero-verse">
-            "Texto del versículo aquí"
-          </p>
+        <div className="hero-content-rema">
+          <img src={flayerRema} alt="Flayer Rema" className="hero-flayer-img-rema" />
         </div>
       </section>
 

@@ -87,6 +87,25 @@ ul { list-style: none; }
     max-width: 700px;
     margin: 0 auto;
 }
+.hero-content-rema {
+    position: relative;
+    z-index: 2; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.hero-flayer-img-rema {
+    width: 100%;
+    max-width: 550px;
+    height: auto;
+    object-fit: contain; 
+    display: block;
+    margin: 25px auto;
+}
 .page-hero-eyebrow {
     font-size: 0.95rem;
     color: var(--gold);
