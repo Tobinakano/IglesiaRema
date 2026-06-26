@@ -7,11 +7,11 @@ function FamiliaRema() {
       {/* HERO */}
       <section className="page-hero">
         <div className="page-hero-content">
-          <h1 className="page-hero-title">Familia Remanente</h1>
+          <h1 className="page-hero-title">Familia Remanente Cali</h1>
           <div className="page-hero-rule"></div>
           <p className="page-hero-text">
-            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+            No Somos La Mejor Familia,
+            Pero Somos Una Buena Familia
           </p>
         </div>
       </section>

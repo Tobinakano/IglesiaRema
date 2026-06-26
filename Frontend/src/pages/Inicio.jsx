@@ -1,6 +1,7 @@
 import "../styles/global.css";
 import { Link } from "react-router-dom";
 import Carousel from "../components/Carousel";
+import flayerRema from "../assets/images/Flayer Rema.png";
 
 function Inicio() {
   return (
@@ -11,10 +12,7 @@ function Inicio() {
 
         <div className="hero-content">
           <h1 className="hero-title">
-            <span className="line1">Iglesia Cristiana</span>
-            <span className="line2">
-              <span className="dim">Remanente</span> Cali
-            </span>
+            <img src={flayerRema} alt="Flayer Rema" className="hero-flayer-img" />
           </h1>
 
           <p className="hero-verse">
