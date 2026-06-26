@@ -1,5 +1,6 @@
 import "../styles/global.css";
 import "../styles/familiarema.css";
+import imagenPastores from "../assets/images/Foto Pastores.png";
 
 function FamiliaRema() {
   return (
@@ -64,7 +65,7 @@ function FamiliaRema() {
             <div className="heading-rule"></div>
           </div>
           <div className="pastores-grid">
-            {/* Columna izquierda: imagen */}
+            <img src={imagenPastores} alt="Foto de los pastores"/>
             <div className="pastores-img-wrap">
               <div className="pastores-img-frame">
                 <div className="pastores-img-placeholder">
