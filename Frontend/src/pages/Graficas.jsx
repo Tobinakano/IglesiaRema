@@ -313,7 +313,7 @@ export default function Graficas() {
           {showUserMenu && (
             <div className="graficas-user-menu">
               <div className="graficas-user-menu-content">
-                <a href="#" className="graficas-user-menu-item">
+                <a href={session ? `/admin/editar/${session.id}` : '#'} className="graficas-user-menu-item">
                   <i className="fas fa-user graficas-user-menu-icon"></i> <span>Mi Perfil</span>
                 </a>
                 <div className="graficas-user-menu-divider"></div>

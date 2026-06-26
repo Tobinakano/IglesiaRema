@@ -3,6 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { logout } from "../utils/auth";
 import "../styles/admin.css";
 
+// URL dinámica según el entorno
+const API_URL = window.location.hostname === 'localhost'
+  ? ''
+  : 'https://iglesia-rema-backend.onrender.com';
+
 function EditarPersona() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -26,7 +31,7 @@ function EditarPersona() {
     const cargarDatos = async () => {
       try {
         // Obtener usuario autenticado
-        const authRes = await fetch("/api/auth", {
+        const authRes = await fetch(`${API_URL}/api/auth`, {
           credentials: "include",
         });
         if (authRes.ok) {
@@ -35,7 +40,7 @@ function EditarPersona() {
         }
 
         // Obtener datos de la persona a editar
-        const res = await fetch(`/api/personas/${id}`, {
+        const res = await fetch(`${API_URL}/api/personas/${id}`, {
           credentials: "include",
         });
         if (!res.ok) throw new Error("Error al cargar los datos");
@@ -96,7 +101,7 @@ function EditarPersona() {
     }
 
     // Enviar actualización al backend
-    fetch(`/api/personas/${id}`, {
+    fetch(`${API_URL}/api/personas/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json"
@@ -183,7 +188,7 @@ function EditarPersona() {
             {showUserMenu && (
               <div style={{ position: 'absolute', top: '50px', right: '0', background: '#fff', border: '1px solid #e4e6ea', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', minWidth: '200px', zIndex: 1000 }}>
                 <div style={{ padding: '12px 0' }}>
-                  <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }} onMouseEnter={(e) => e.target.parentElement.style.background = '#f4f5f7'} onMouseLeave={(e) => e.target.parentElement.style.background = 'transparent'}>
+                  <a href={usuarioActual ? `/admin/editar/${usuarioActual.id}` : '#'} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }} onMouseEnter={(e) => e.target.parentElement.style.background = '#f4f5f7'} onMouseLeave={(e) => e.target.parentElement.style.background = 'transparent'}>
                     <i className="fas fa-user" style={{ width: '20px', textAlign: 'center' }}></i>
                     <span>Mi Perfil</span>
                   </a>
@@ -289,6 +294,8 @@ function EditarPersona() {
                       name="rol"
                       value={formData.rol}
                       onChange={handleChange}
+                      disabled={usuarioActual && usuarioActual.id === Number(id)}
+                      style={usuarioActual && usuarioActual.id === Number(id) ? { backgroundColor: '#f0f0f0', cursor: 'not-allowed' } : {}}
                     >
                       <option value="Administrador">Administrador</option>
                       <option value="Asistencias">Asistencias</option>

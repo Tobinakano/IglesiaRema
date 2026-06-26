@@ -213,7 +213,7 @@ export default function EditarAsistencia() {
           </div>
           {showUserMenu && (
             <div className="user-menu">
-              <a href="#" className="user-menu-item">
+              <a href={session ? `/admin/editar/${session.id}` : '#'} className="user-menu-item">
                 <i className="fas fa-user"></i>
                 <span>Mi Perfil</span>
               </a>

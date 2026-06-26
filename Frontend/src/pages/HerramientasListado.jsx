@@ -298,7 +298,7 @@ export default function HerramientasListado() {
           {showUserMenu && (
             <div style={{ position: 'absolute', top: '50px', right: '0', background: '#fff', border: '1px solid #e4e6ea', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', minWidth: '200px', zIndex: 1000 }}>
               <div style={{ padding: '12px 0' }}>
-                <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }}>
+                <a href={session ? `/admin/editar/${session.id}` : '#'} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }}>
                   <i className="fas fa-user" style={{ width: '20px', textAlign: 'center' }}></i>
                   <span>Mi Perfil</span>
                 </a>
