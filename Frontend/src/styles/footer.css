@@ -27,7 +27,7 @@
 }
 .footer-address-text svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .footer-bottom {
-    background: var(--black);
+    background: #0F0F0D;
     padding: 16px 40px;
     text-align: center;
 }

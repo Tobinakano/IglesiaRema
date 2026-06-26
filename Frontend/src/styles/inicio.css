@@ -297,7 +297,7 @@ ul { list-style: none; }
    INFO SECTION
 ═══════════════════════════════════ */
 .info-section {
-    background: var(--dark);
+    background: #0F0F0D;
     padding: 80px 24px;
     color: var(--white);
 }
