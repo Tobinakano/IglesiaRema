@@ -65,12 +65,10 @@ function FamiliaRema() {
             <div className="heading-rule"></div>
           </div>
           <div className="pastores-grid">
-            <img src={imagenPastores} alt="Foto de los pastores"/>
             <div className="pastores-img-wrap">
               <div className="pastores-img-frame">
                 <div className="pastores-img-placeholder">
-                  <i className="fas fa-user-large" style={{ fontSize: '48px', marginBottom: '16px' }}></i>
-                  <span>Foto de los pastores</span>
+                  <img src={imagenPastores} alt="Foto de los pastores"/>
                 </div>
               </div>
             </div>
@@ -78,8 +76,8 @@ function FamiliaRema() {
             {/* Columna derecha: info */}
             <div className="pastores-info">
 
-              <div className="pastor-name">Pastor Jonh Jairo</div>
-              <div className="pastor-name">Pastora Ana Maria</div>
+              <div className="pastor-name">Pastor Jonh Jairo Calderon</div>
+              <div className="pastor-name">Pastora Ana Maria Viveros</div>
 
               <div className="pastores-divider"></div>
 

@@ -378,11 +378,15 @@
     background: #2a2a2a;
     border: 1px solid rgba(255,255,255,0.07);
     display: flex; align-items: center; justify-content: center;
+    height: 100%;
 }
 .pastores-img-placeholder {
     display: flex; flex-direction: column;
-    align-items: center; gap: 14px; padding: 32px;
+    align-items: center; gap: 14px;
     text-align: center;
+}
+.pastores-img-placeholder img {
+    width: 126%;
 }
 .pastores-img-placeholder svg {
     width: 64px; height: 64px;
