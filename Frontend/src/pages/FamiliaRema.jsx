@@ -45,14 +45,14 @@ function FamiliaRema() {
               <i className="fas fa-bullseye" style={{ fontSize: '28px' }}></i>
             </div>
             <div className="mv-card-title">Misión</div>
-            <p className="mv-card-text">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p>
+            <p className="mv-card-text">Ejercer el evangelismo, la enseñanza y el discipulado, preparando las vidas para recibir la unción del Espíritu Santo, y estar dispuestos a un obrar apostólico y profético, llevando a cabo una comunión con las personas a través de la visitación y ayuda al necesitado.</p>
           </div>
           <div className="mv-card">
             <div className="mv-icon">
               <i className="fas fa-eye" style={{ fontSize: '28px' }}></i>
             </div>
             <div className="mv-card-title">Visión</div>
-            <p className="mv-card-text">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p>
+            <p className="mv-card-text">Promover la salvación y la restauración de las personas a través del cuidado pastoral y por medio de la palabra de Dios lograr la formación del carácter de Cristo en ellos, convirtiéndolos en verdaderos adoradores: alcanzando los recursos para el desarrollo del ministerio apostólico en beneficio del enriquecimiento del Reino de Dios en la iglesia local y las naciones.</p>
           </div>
         </div>
       </section>

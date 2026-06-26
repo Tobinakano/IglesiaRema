@@ -41,28 +41,28 @@ function Inicio() {
           </div>
 
           <div className="platforms-grid">
-            <a href="#" className="platform-card">
+            <a href="https://www.facebook.com/iglesiacristianaremanentecali?locale=es_LA" className="platform-card">
               <div className="platform-icon-circle">
                 <i className="fab fa-facebook" style={{ fontSize: '32px', color: '#1877F2' }}></i>
               </div>
               <span className="platform-name">Facebook</span>
             </a>
 
-            <a href="#" className="platform-card">
+            <a href="https://www.youtube.com/@remanentecaliiglesiacristi2110" className="platform-card">
               <div className="platform-icon-circle">
                 <i className="fab fa-youtube" style={{ fontSize: '32px', color: '#FF0000' }}></i>
               </div>
               <span className="platform-name">YouTube</span>
             </a>
 
-            <a href="#" className="platform-card">
+            <a href="https://www.instagram.com/remanentecali/" className="platform-card">
               <div className="platform-icon-circle">
                 <i className="fab fa-instagram" style={{ fontSize: '32px', background: 'linear-gradient(45deg, #fcb045, #fd1d1d, #833ab4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}></i>
               </div>
               <span className="platform-name">Instagram</span>
             </a>
 
-            <a href="#" className="platform-card">
+            <a href="https://www.tiktok.com/@remanentecali" className="platform-card">
               <div className="platform-icon-circle">
                 <i className="fab fa-tiktok" style={{ fontSize: '32px' }}></i>
               </div>
