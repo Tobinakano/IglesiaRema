@@ -7,11 +7,9 @@ function Inicio() {
   return (
     <main>
 
-      <section className="hero">
-        <div className="hero-bg"></div>
-        <div className="hero-content-rema">
-          <img src={flayerRema} alt="Flayer Rema" className="hero-flayer-img-rema" />
-        </div>
+      <section className="seccion-hero-iglesia">
+        <div className="fondo-oscuro-base"></div>
+        <img src={flayerRema} alt="Flayer Rema" className="imagen-flayer-remanente-full" />
       </section>
 
       <section className="live-section">
