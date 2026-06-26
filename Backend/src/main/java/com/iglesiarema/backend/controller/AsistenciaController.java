@@ -24,6 +24,9 @@ public class AsistenciaController {
     @Autowired
     private AsistenciaRegistroRepository registrosRepository;
 
+    @Autowired
+    private com.iglesiarema.backend.repository.HerramientasRegistroRepository herramientasRepository;
+
     // Obtener todas las personas registradas
     @GetMapping
     public ResponseEntity<List<Asistencia>> listarAsistencia() {
@@ -95,6 +98,49 @@ public class AsistenciaController {
         Map<String, Object> response = new HashMap<>();
         response.put("ok", true);
         response.put("guardadas", guardadas);
+        return ResponseEntity.ok(response);
+    }
+
+    // Marcar o desmarcar una asistencia individual (auto-save en checkbox click)
+    @PostMapping("/marcar")
+    public ResponseEntity<?> marcarAsistencia(@RequestBody com.iglesiarema.backend.dto.MarcarAsistenciaRequest request) {
+        if (request.getFecha() == null || request.getPersonaId() == null) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Fecha y persona_id son requeridos");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        String fecha = request.getFecha();
+        Long personaId = request.getPersonaId();
+        boolean asistio = request.isAsistio();
+
+        if (asistio) {
+            boolean exists = registrosRepository.existsByFechaAndPersonaId(fecha, personaId);
+            if (!exists) {
+                Optional<Asistencia> personaOpt = asistenciaRepository.findById(personaId);
+                if (personaOpt.isPresent()) {
+                    Asistencia persona = personaOpt.get();
+                    AsistenciaRegistro registro = AsistenciaRegistro.builder()
+                            .fecha(fecha)
+                            .personaId(personaId)
+                            .nombreCompleto(persona.getNombreCompleto())
+                            .numero(persona.getNumero())
+                            .sexo(persona.getSexo())
+                            .grupo(persona.getGrupo())
+                            .build();
+                    registrosRepository.save(registro);
+                } else {
+                    Map<String, String> error = new HashMap<>();
+                    error.put("error", "Persona no encontrada");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+                }
+            }
+        } else {
+            registrosRepository.deleteByFechaAndPersonaId(fecha, personaId);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("ok", true);
         return ResponseEntity.ok(response);
     }
 
@@ -220,6 +266,7 @@ public class AsistenciaController {
                     long ninos = list.stream().filter(r -> "Niños".equalsIgnoreCase(r.getGrupo())).count();
                     long jovenes = list.stream().filter(r -> "Jóvenes".equalsIgnoreCase(r.getGrupo())).count();
                     long adultos = list.stream().filter(r -> "Adultos".equalsIgnoreCase(r.getGrupo())).count();
+                    long nuevos = list.stream().filter(r -> "Nuevos".equalsIgnoreCase(r.getGrupo()) || "Nuevo".equalsIgnoreCase(r.getGrupo())).count();
 
                     Map<String, Object> map = new LinkedHashMap<>();
                     map.put("fecha", fechaStr);
@@ -227,11 +274,97 @@ public class AsistenciaController {
                     map.put("niños", ninos);
                     map.put("jóvenes", jovenes);
                     map.put("adultos", adultos);
+                    map.put("nuevos", nuevos);
                     return map;
                 })
                 .sorted(Comparator.comparing(m -> (String) m.get("fecha")))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
+    }
+
+    // --- ENDPOINTS PARA HERRAMIENTAS PARA EL CAMINO ---
+
+    // Inscribir o desinscribir a una persona de "Herramientas para el Camino"
+    @PutMapping("/{id}/herramientas")
+    public ResponseEntity<?> actualizarEnrolamientoHerramientas(@PathVariable Long id, @RequestParam boolean enrolled) {
+        Optional<Asistencia> personaOpt = asistenciaRepository.findById(id);
+        if (personaOpt.isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Persona no encontrada");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+        Asistencia persona = personaOpt.get();
+        persona.setHerramientas(enrolled);
+        asistenciaRepository.save(persona);
+        Map<String, Object> response = new HashMap<>();
+        response.put("ok", true);
+        response.put("id", id);
+        response.put("herramientas", enrolled);
+        return ResponseEntity.ok(response);
+    }
+
+    // Marcar o desmarcar asistencia individual en "Herramientas para el Camino"
+    @PostMapping("/herramientas/marcar")
+    public ResponseEntity<?> marcarHerramientas(@RequestBody com.iglesiarema.backend.dto.MarcarAsistenciaRequest request) {
+        if (request.getFecha() == null || request.getPersonaId() == null) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Fecha y persona_id son requeridos");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        String fecha = request.getFecha();
+        Long personaId = request.getPersonaId();
+        boolean asistio = request.isAsistio();
+
+        if (asistio) {
+            boolean exists = herramientasRepository.existsByFechaAndPersonaId(fecha, personaId);
+            if (!exists) {
+                Optional<Asistencia> personaOpt = asistenciaRepository.findById(personaId);
+                if (personaOpt.isPresent()) {
+                    Asistencia persona = personaOpt.get();
+                    com.iglesiarema.backend.model.HerramientasRegistro registro = com.iglesiarema.backend.model.HerramientasRegistro.builder()
+                            .fecha(fecha)
+                            .personaId(personaId)
+                            .nombreCompleto(persona.getNombreCompleto())
+                            .numero(persona.getNumero())
+                            .sexo(persona.getSexo())
+                            .grupo(persona.getGrupo())
+                            .build();
+                    herramientasRepository.save(registro);
+                } else {
+                    Map<String, String> error = new HashMap<>();
+                    error.put("error", "Persona no encontrada");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+                }
+            }
+        } else {
+            herramientasRepository.deleteByFechaAndPersonaId(fecha, personaId);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("ok", true);
+        return ResponseEntity.ok(response);
+    }
+
+    // Obtener registros de asistencia de Herramientas por fecha específica
+    @GetMapping("/herramientas/registros/{fecha}")
+    public ResponseEntity<List<com.iglesiarema.backend.model.HerramientasRegistro>> obtenerRegistrosHerramientasPorFecha(@PathVariable String fecha) {
+        return ResponseEntity.ok(herramientasRepository.findByFechaOrdered(fecha));
+    }
+
+    // Listado agrupado por fecha de asistencias de Herramientas tomadas
+    @GetMapping("/herramientas/registros")
+    public ResponseEntity<List<com.iglesiarema.backend.repository.HerramientasRegistroRepository.RegistroResumen>> listarFechasRegistrosHerramientas() {
+        return ResponseEntity.ok(herramientasRepository.findResumenGroupedByFecha());
+    }
+
+    // Eliminar registros de asistencia de Herramientas de una fecha específica
+    @DeleteMapping("/herramientas/registros/{fecha}")
+    public ResponseEntity<?> eliminarRegistrosHerramientasPorFecha(@PathVariable String fecha) {
+        herramientasRepository.deleteByFecha(fecha);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("ok", true);
+        return ResponseEntity.ok(response);
     }
 }

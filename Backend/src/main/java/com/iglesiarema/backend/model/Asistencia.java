@@ -38,4 +38,9 @@ public class Asistencia {
 
     @Column(length = 100)
     private String barrio;
+
+    @Column(name = "herramientas", nullable = false)
+    @Builder.Default
+    @JsonProperty("herramientas")
+    private Boolean herramientas = false;
 }

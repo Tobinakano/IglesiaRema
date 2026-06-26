@@ -26,6 +26,11 @@ public interface AsistenciaRegistroRepository extends JpaRepository<AsistenciaRe
     @Query("DELETE FROM AsistenciaRegistro ar WHERE ar.fecha = :fecha")
     void deleteByFecha(@Param("fecha") String fecha);
 
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM AsistenciaRegistro ar WHERE ar.fecha = :fecha AND ar.personaId = :personaId")
+    void deleteByFechaAndPersonaId(@Param("fecha") String fecha, @Param("personaId") Long personaId);
+
     List<AsistenciaRegistro> findByFechaStartingWith(String mesPattern);
 
     // Interface projection for grouping query

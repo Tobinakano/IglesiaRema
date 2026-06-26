@@ -13,7 +13,8 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 const COLORES = {
   'Niños': '#3b82f6',
   'Jóvenes': '#8b5cf6',
-  'Adultos': '#10b981'
+  'Adultos': '#10b981',
+  'Nuevos': '#f59e0b'
 };
 
 export default function ListadoAsistencias() {
@@ -102,7 +103,8 @@ export default function ListadoAsistencias() {
     const coloresGrupo = { 
       'Niños': [96, 165, 250],
       'Jóvenes': [129, 140, 248],
-      'Adultos': [52, 211, 153]
+      'Adultos': [52, 211, 153],
+      'Nuevos': [245, 158, 11]
     };
     
     let currentPage = 1;
@@ -125,7 +127,7 @@ export default function ListadoAsistencias() {
     doc.text(`Asistencias registradas el ${fechaFormato}`, 105, yPos, { align: 'center' });
     yPos += 10;
     
-    const grupos = ['Niños', 'Jóvenes', 'Adultos'];
+    const grupos = ['Niños', 'Jóvenes', 'Adultos', 'Nuevos'];
     
     grupos.forEach((grupo) => {
       const personasGrupo = personas.filter(p => p.grupo === grupo);
@@ -251,7 +253,7 @@ export default function ListadoAsistencias() {
             <span className="sidebar-brand-sub">Cali</span>
           </div>
         </div>
-        <span className="sidebar-label">Menú</span>
+        <span className="sidebar-label">Menú General</span>
         <nav className="sidebar-nav">
           <a href="/asistencia/listado" className="nav-item">
             <i className="fas fa-check-square"></i>
@@ -264,6 +266,18 @@ export default function ListadoAsistencias() {
           <a href="/asistencia/graficas" className="nav-item">
             <i className="fas fa-chart-bar"></i>
             Gráficas
+          </a>
+        </nav>
+
+        <span className="sidebar-label">Herramientas para el Camino</span>
+        <nav className="sidebar-nav">
+          <a href="/asistencia/herramientas/listado" className="nav-item">
+            <i className="fas fa-check-square"></i>
+            Registrar Asistencia
+          </a>
+          <a href="/asistencia/herramientas/registros" className="nav-item">
+            <i className="fas fa-clipboard-list"></i>
+            Listado de Registros
           </a>
         </nav>
         <div className="sidebar-footer">
@@ -420,7 +434,7 @@ export default function ListadoAsistencias() {
                   </div>
                 ) : (
                   <div>
-                    {['Niños', 'Jóvenes', 'Adultos'].map((grupo) => {
+                    {['Niños', 'Jóvenes', 'Adultos', 'Nuevos'].map((grupo) => {
                       const personasGrupo = detalles.personas.filter(p => p.grupo === grupo);
                       return personasGrupo.length > 0 ? (
                         <div key={grupo} style={{ marginBottom: '28px' }}>

@@ -92,6 +92,7 @@ export default function Graficas() {
                     adultos: Number(item.adultos) || 0,
                     jovenes: Number(item.jovenes) || Number(item.jóvenes) || 0,
                     ninos: Number(item.ninos) || Number(item.niños) || 0,
+                    nuevos: Number(item.nuevos) || Number(item.nuevo) || 0,
                     diaLabel: diaLabel,
                     mes: fecha.getMonth() + 1
                   };
@@ -130,8 +131,9 @@ export default function Graficas() {
               const adultos = Number(item.adultos) || 0;
               const jovenes = Number(item.jovenes) || Number(item.jóvenes) || 0;
               const ninos = Number(item.ninos) || Number(item.niños) || 0;
+              const nuevos = Number(item.nuevos) || Number(item.nuevo) || 0;
               
-              const totalPersonas = adultos + jovenes + ninos;
+              const totalPersonas = adultos + jovenes + ninos + nuevos;
               mesesDataAnual[mesKey].visitantes += totalPersonas;
             });
           }
@@ -177,7 +179,8 @@ export default function Graficas() {
             diaLabel: new Date(item.dia).getDate().toString(),
             adultos: Number(item.adultos) || 0,
             jovenes: Number(item.jovenes) || 0,
-            ninos: Number(item.ninos) || 0
+            ninos: Number(item.ninos) || 0,
+            nuevos: Number(item.nuevos) || 0
           }));
           setChartData(datosDelMes);
           if (grafica.mes) {
@@ -266,7 +269,7 @@ export default function Graficas() {
             <span className="sidebar-brand-sub">Cali</span>
           </div>
         </div>
-        <span className="sidebar-label">Menú</span>
+        <span className="sidebar-label">Menú General</span>
         <nav className="sidebar-nav">
           <a href="/asistencia/listado" className="nav-item">
             <i className="fas fa-check-square"></i> Registrar Asistencias
@@ -276,6 +279,16 @@ export default function Graficas() {
           </a>
           <a href="/asistencia/graficas" className="nav-item active">
             <i className="fas fa-chart-bar"></i> Gráficas
+          </a>
+        </nav>
+
+        <span className="sidebar-label">Herramientas para el Camino</span>
+        <nav className="sidebar-nav">
+          <a href="/asistencia/herramientas/listado" className="nav-item">
+            <i className="fas fa-check-square"></i> Registrar Asistencia
+          </a>
+          <a href="/asistencia/herramientas/registros" className="nav-item">
+            <i className="fas fa-clipboard-list"></i> Listado de Registros
           </a>
         </nav>
         <div className="sidebar-footer">
@@ -364,6 +377,7 @@ export default function Graficas() {
                   <Bar dataKey="adultos" name="Adultos" fill="#10b981" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="jovenes" name="Jóvenes" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="ninos" name="Niños" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="nuevos" name="Nuevos" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

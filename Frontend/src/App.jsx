@@ -16,6 +16,8 @@ import AgregarPersona from "./pages/AgregarPersona";
 import PersonasRegistradas from "./pages/PersonasRegistradas";
 import Asistencias from "./pages/Asistencias";
 import ListadoAsistencias from "./pages/ListadoAsistencias";
+import HerramientasAsistencias from "./pages/HerramientasAsistencias";
+import HerramientasListado from "./pages/HerramientasListado";
 import Graficas from "./pages/Graficas";
 import AdminFlayers from "./pages/AdminFlayers";
 import RequireAuth from "./components/RequireAuth";
@@ -143,6 +145,17 @@ function App() {
         <Route path="/asistencia/registros" element={
           <RequireAuth>
             <ListadoAsistencias />
+          </RequireAuth>
+        } />
+        {/* Herramientas para el Camino - Asistencia y Registros */}
+        <Route path="/asistencia/herramientas/listado" element={
+          <RequireAuth>
+            <HerramientasAsistencias />
+          </RequireAuth>
+        } />
+        <Route path="/asistencia/herramientas/registros" element={
+          <RequireAuth>
+            <HerramientasListado />
           </RequireAuth>
         } />
         {/* Gráficas - Panel de análisis protegido */}

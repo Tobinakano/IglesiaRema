@@ -3,11 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { logout } from '../utils/auth';
 import '../styles/asistencias.css';
 
-const GRUPOS = ['Niños', 'Jóvenes', 'Adultos'];
+const GRUPOS = ['Niños', 'Jóvenes', 'Adultos', 'Nuevos'];
 const COLORES = {
   'Niños': '#3b82f6',
   'Jóvenes': '#8b5cf6',
-  'Adultos': '#10b981'
+  'Adultos': '#10b981',
+  'Nuevos': '#f59e0b'
 };
 
 // URL dinámica según el entorno
@@ -164,7 +165,7 @@ export default function EditarAsistencia() {
             <span className="sidebar-brand-sub">Cali</span>
           </div>
         </div>
-        <span className="sidebar-label">Menú</span>
+        <span className="sidebar-label">Menú General</span>
         <nav className="sidebar-nav">
           <a href="/asistencia/listado" className="nav-item">
             <i className="fas fa-check-square"></i>
@@ -177,6 +178,18 @@ export default function EditarAsistencia() {
           <a href="/asistencia/graficas" className="nav-item">
             <i className="fas fa-chart-bar"></i>
             Gráficas
+          </a>
+        </nav>
+
+        <span className="sidebar-label">Herramientas para el Camino</span>
+        <nav className="sidebar-nav">
+          <a href="/asistencia/herramientas/listado" className="nav-item">
+            <i className="fas fa-check-square"></i>
+            Registrar Asistencia
+          </a>
+          <a href="/asistencia/herramientas/registros" className="nav-item">
+            <i className="fas fa-clipboard-list"></i>
+            Listado de Registros
           </a>
         </nav>
         <div className="sidebar-footer">

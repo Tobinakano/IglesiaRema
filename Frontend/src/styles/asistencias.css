@@ -26,6 +26,7 @@
     --dot-ninos: #3b82f6;
     --dot-jovenes: #8b5cf6;
     --dot-adultos: #10b981;
+    --dot-nuevos: #f59e0b;
 }
 
 *, *::before, *::after {
@@ -825,4 +826,9 @@ input {
 
 .btn-modal:hover {
     background: #b8941d;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

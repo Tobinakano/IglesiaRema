@@ -8,14 +8,17 @@ C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\back
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\controller\FlayerController.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\controller\PersonaController.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\dto\LoginRequest.java
+C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\dto\MarcarAsistenciaRequest.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\dto\RegistrarAsistenciaRequest.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\dto\SessionUser.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\model\Asistencia.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\model\AsistenciaRegistro.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\model\Flayer.java
+C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\model\HerramientasRegistro.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\model\Persona.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\repository\AsistenciaRegistroRepository.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\repository\AsistenciaRepository.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\repository\FlayerRepository.java
+C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\repository\HerramientasRegistroRepository.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\repository\PersonaRepository.java
 C:\Users\Joseph\Downloads\IglesiaRema\Backend\src\main\java\com\iglesiarema\backend\util\PasswordUtil.java

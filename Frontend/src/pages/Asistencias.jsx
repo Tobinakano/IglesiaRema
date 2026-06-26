@@ -8,11 +8,12 @@ const API_BASE_URL = window.location.hostname === 'localhost'
   ? ''
   : 'https://iglesia-rema-backend.onrender.com';
 
-const GRUPOS = ['Niños', 'Jóvenes', 'Adultos'];
+const GRUPOS = ['Niños', 'Jóvenes', 'Adultos', 'Nuevos'];
 const COLORES = {
   'Niños': '#3b82f6',
   'Jóvenes': '#8b5cf6',
-  'Adultos': '#10b981'
+  'Adultos': '#10b981',
+  'Nuevos': '#f59e0b'
 };
 
 export default function Asistencias() {
@@ -20,13 +21,41 @@ export default function Asistencias() {
   const [session, setSession] = useState(null);
   const [personas, setPersonas] = useState([]);
   const [asistencias, setAsistencias] = useState({});
-  const [expandedGrupos, setExpandedGrupos] = useState({ 'Niños': true, 'Jóvenes': true, 'Adultos': true });
+  const [expandedGrupos, setExpandedGrupos] = useState({ 'Niños': true, 'Jóvenes': true, 'Adultos': true, 'Nuevos': true });
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [modalBorrar, setModalBorrar] = useState(false);
   const [personaBorrar, setPersonaBorrar] = useState(null);
   const [modalConfirmacion, setModalConfirmacion] = useState(false);
   const [mensajeConfirmacion, setMensajeConfirmacion] = useState('');
+
+  // 1. Estados para fecha seleccionada y estado de autoguardado
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    const offset = d.getTimezoneOffset();
+    const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+  });
+  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+
+  // 2. Función para cargar el estado de asistencias del día seleccionado
+  const cargarEstadoAsistencias = async (fecha) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/asistencia/registros/${fecha}`, { credentials: 'include' });
+      if (res.ok) {
+        const registros = await res.json();
+        const map = {};
+        registros.forEach(reg => {
+          map[reg.persona_id] = true;
+        });
+        setAsistencias(map);
+      } else {
+        console.error('Error cargando registros de asistencia');
+      }
+    } catch (error) {
+      console.error('Error de red cargando registros:', error);
+    }
+  };
 
   useEffect(() => {
     const iniciar = async () => {
@@ -57,10 +86,21 @@ export default function Asistencias() {
           // Revisar si se acaba de agregar una persona y marcarla como asistida
           const personaAcabaDeAgregarse = localStorage.getItem('personaAcabaDeAgregarse');
           if (personaAcabaDeAgregarse) {
+            localStorage.removeItem('personaAcabaDeAgregarse');
             try {
               const nuevaPersona = JSON.parse(personaAcabaDeAgregarse);
-              setAsistencias(prev => ({ ...prev, [nuevaPersona.id]: true }));
-              localStorage.removeItem('personaAcabaDeAgregarse');
+              // Marcar en BD para el día de hoy
+              const d = new Date();
+              const offset = d.getTimezoneOffset();
+              const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+              const fechaHoy = localDate.toISOString().split('T')[0];
+              
+              await fetch(`${API_BASE_URL}/api/asistencia/marcar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ fecha: fechaHoy, persona_id: nuevaPersona.id, asistio: true })
+              });
             } catch (e) {
               console.error('Error al procesar personaAcabaDeAgregarse:', e);
             }
@@ -69,17 +109,65 @@ export default function Asistencias() {
       } catch (error) {
         console.error('Error cargando asistencia:', error);
       }
+      
+      await cargarEstadoAsistencias(selectedDate);
       setLoading(false);
     };
     
     iniciar();
   }, [navigate]);
 
-  const toggleAsistencia = (personaId) => {
+  // Cargar estado de asistencias cada vez que cambie la fecha
+  useEffect(() => {
+    if (!loading && session) {
+      cargarEstadoAsistencias(selectedDate);
+    }
+  }, [selectedDate]);
+
+  const toggleAsistencia = async (personaId) => {
+    const nuevoEstado = !asistencias[personaId];
+
+    // Actualización optimista del estado local
     setAsistencias(prev => ({
       ...prev,
-      [personaId]: !prev[personaId]
+      [personaId]: nuevoEstado
     }));
+
+    setSaveStatus('saving');
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/asistencia/marcar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          fecha: selectedDate,
+          persona_id: personaId,
+          asistio: nuevoEstado
+        })
+      });
+
+      if (res.ok) {
+        setSaveStatus('saved');
+        // Regresar a 'idle' después de un momento
+        setTimeout(() => {
+          setSaveStatus(prev => prev === 'saved' ? 'idle' : prev);
+        }, 2000);
+      } else {
+        throw new Error('Error en la respuesta del servidor');
+      }
+    } catch (error) {
+      console.error('Error al guardar asistencia:', error);
+      setSaveStatus('error');
+      
+      // Revertir cambio optimista
+      setAsistencias(prev => ({
+        ...prev,
+        [personaId]: !nuevoEstado
+      }));
+
+      setMensajeConfirmacion('No se pudo guardar el cambio. Por favor, verifica tu conexión.');
+      setModalConfirmacion(true);
+    }
   };
 
   const handleBorrar = (personaId, nombreCompleto) => {
@@ -126,48 +214,7 @@ export default function Asistencias() {
     // Función eliminada - usar página de AgregarPersona en su lugar
   };
 
-  const handleGuardar = async () => {
-    try {
-      // Obtener personas con asistencia marcada
-      const asistenciasARegistrar = Object.entries(asistencias)
-        .filter(([, asistio]) => asistio)
-        .map(([id]) => {
-          const persona = personas.find(p => p.id == id);
-          return persona ? { 
-            id: persona.id, 
-            nombre_completo: persona.nombre_completo, 
-            numero: persona.numero,
-            sexo: persona.sexo,
-            grupo: persona.grupo 
-          } : null;
-        })
-        .filter(p => p !== null);
-
-      // Guardar asistencias en BD si hay alguna marcada
-      if (asistenciasARegistrar.length > 0) {
-        // 6. Ajustado fetch de registro (POST) con la URL Base externa
-        const resRegistro = await fetch(`${API_BASE_URL}/api/asistencia/registrar`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ asistencias: asistenciasARegistrar })
-        });
-
-        if (resRegistro.ok) {
-          // Limpiar checkboxes después de guardar
-          setAsistencias({});
-          // Mostrar confirmación
-          setMensajeConfirmacion('Asistencias guardadas correctamente');
-          setModalConfirmacion(true);
-        } else {
-          setMensajeConfirmacion('Error al guardar las asistencias');
-          setModalConfirmacion(true);
-        }
-      }
-    } catch (error) {
-      console.error('Error al guardar:', error);
-    }
-  };
+  // El guardado ahora es en tiempo real y automático por cada casilla de verificación.
 
   const toggleGrupo = (grupo) => {
     setExpandedGrupos(prev => ({
@@ -194,7 +241,8 @@ export default function Asistencias() {
             <span className="sidebar-brand-sub">Cali</span>
           </div>
         </div>
-        <span className="sidebar-label">Menú</span>
+        
+        <span className="sidebar-label">Menú General</span>
         <nav className="sidebar-nav">
           <a href="/asistencia/listado" className="nav-item active">
             <i className="fas fa-check-square"></i>
@@ -209,6 +257,19 @@ export default function Asistencias() {
             Gráficas
           </a>
         </nav>
+
+        <span className="sidebar-label">Herramientas para el Camino</span>
+        <nav className="sidebar-nav">
+          <a href="/asistencia/herramientas/listado" className="nav-item">
+            <i className="fas fa-check-square"></i>
+            Registrar Asistencia
+          </a>
+          <a href="/asistencia/herramientas/registros" className="nav-item">
+            <i className="fas fa-clipboard-list"></i>
+            Listado de Registros
+          </a>
+        </nav>
+
         <div className="sidebar-footer">
           <div className="sidebar-user">
             <div className="sidebar-user-avatar">
@@ -260,7 +321,44 @@ export default function Asistencias() {
         <div className="page-header">
           <div className="page-header-left">
             <h1 className="page-title">Control de Asistencias</h1>
-            <p className="page-subtitle">Registra la asistencia del servicio de hoy</p>
+            <p className="page-subtitle">Registra la asistencia del servicio del día</p>
+          </div>
+          <div className="page-header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            {/* Indicador de estado de autoguardado */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: saveStatus === 'error' ? '#ef4444' : saveStatus === 'saved' ? '#10b981' : '#9098a3', transition: 'all 0.3s ease' }}>
+              {saveStatus === 'saving' && (
+                <>
+                  <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid #e4e6ea', borderTopColor: '#c9a84c', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}></span>
+                  <span>Guardando...</span>
+                </>
+              )}
+              {saveStatus === 'saved' && (
+                <>
+                  <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>✓ Cambios guardados</span>
+                </>
+              )}
+              {saveStatus === 'error' && (
+                <>
+                  <span style={{ color: '#ef4444' }}>⚠️ Error al guardar</span>
+                </>
+              )}
+              {saveStatus === 'idle' && (
+                <>
+                  <span style={{ color: '#9098a3' }}>☁️ Guardado automático activo</span>
+                </>
+              )}
+            </div>
+
+            {/* Selector de fecha */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid #e4e6ea', padding: '6px 12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <span style={{ color: '#c9a84c', fontSize: '14px' }}>📅</span>
+              <input 
+                type="date" 
+                value={selectedDate} 
+                onChange={(e) => setSelectedDate(e.target.value)} 
+                style={{ border: 'none', outline: 'none', fontFamily: 'inherit', fontSize: '14px', color: '#1a1a1a', cursor: 'pointer' }}
+              />
+            </div>
           </div>
         </div>
 
@@ -361,11 +459,7 @@ export default function Asistencias() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
-          <button onClick={handleGuardar} style={{ padding: '12px 28px', background: '#c9a84c', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>
-            Guardar Asistencias
-          </button>
-        </div>
+        {/* El guardado ahora es automático en cada checkbox */}
 
         {modalBorrar && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
