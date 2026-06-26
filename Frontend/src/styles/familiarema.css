@@ -121,9 +121,10 @@
 
 /* INTRO SECTION */
 .intro-section {
-    background: #f0f0f0;
+    background: #ffffff;
     padding: 60px 40px;
     text-align: center;
+    color: #0F0F0D
 }
 .intro-inner {
     max-width: 900px;
@@ -131,7 +132,7 @@
 }
 .intro-body {
     font-size: 1rem;
-    color: #555;
+    color: #0F0F0D;
     line-height: 1.8;
     margin-bottom: 0;
 }
@@ -345,7 +346,7 @@
     letter-spacing: 0.01em;
 }
 .mv-card-text {
-    font-size: 14.5px; color: #555;
+    font-size: 1rem; color: #555;
     font-weight: 300; line-height: 1.85;
 }
 
@@ -490,8 +491,7 @@
     stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
 }
 .servicio-name {
-    font-family: var(--serif);
-    font-size: 1.35rem; font-weight: 700;
+    font-size: 1.35rem; font-weight: 660;
     color: var(--black); margin-bottom: 10px;
 }
 .servicio-day {

@@ -1,5 +1,6 @@
 import "../styles/global.css";
 import "../styles/equipos.css";
+import pandero from "../assets/images/tamburine.png";
 
 function Equipos() {
   return (
@@ -100,7 +101,7 @@ function Equipos() {
           {/* Danza */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <i className="fas fa-person-dancing" style={{ fontSize: '28px' }}></i>
+              <img src={pandero} alt="Pandero" />
             </div>
             <span className="ministerio-name">Danza</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>

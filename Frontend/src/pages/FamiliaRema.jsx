@@ -33,7 +33,6 @@ function FamiliaRema() {
           </p>
         </div>
       </section>
-      <hr />
       <section className="mv-section">
         <div className="section-heading">
           <h2>Misión & Visión</h2>
