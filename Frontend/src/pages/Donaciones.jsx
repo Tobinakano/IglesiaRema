@@ -20,51 +20,29 @@ function Donaciones() {
           {/* QR CARDS */}
           <div className="qr-grid">
 
-            {/* QR 1 */}
-            <div className="qr-card">
-              <p className="qr-label">Nequi</p>
-              <div className="qr-placeholder">
-                <i className="fas fa-qrcode" style={{ fontSize: '80px', color: '#1a1a1a' }}></i>
-              </div>
-              <hr className="qr-divider"/>
-              <div className="qr-info">
-                <div className="qr-info-row">
-                  <div className="qr-info-icon">@</div>
-                  <div className="qr-info-text">
-                    <strong>Usuario / Cuenta</strong>
-                    @xxxxxxxxxx
-                  </div>
-                </div>
-                <div className="qr-info-row">
-                  <div className="qr-info-icon">#</div>
-                  <div className="qr-info-text">
-                    <strong>Número</strong>
-                    +57 311 111 1111
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* QR 2 */}
             <div className="qr-card">
               <p className="qr-label">Davivienda</p>
-              <div className="qr-placeholder">
-                <i className="fas fa-qrcode" style={{ fontSize: '80px', color: '#1a1a1a' }}></i>
-              </div>
-              <hr className="qr-divider"/>
-              <div className="qr-info">
-                <div className="qr-info-row">
-                  <div className="qr-info-icon">@</div>
-                  <div className="qr-info-text">
-                    <strong>Usuario / Cuenta</strong>
-                    @xxxxxxxxxx
-                  </div>
+
+              <div className="qr-content-container">
+                <div className="qr-placeholder">
+                  <i className="fas fa-qrcode" style={{ fontSize: '80px', color: '#1a1a1a' }}></i>
                 </div>
-                <div className="qr-info-row">
-                  <div className="qr-info-icon">#</div>
-                  <div className="qr-info-text">
-                    <strong>Número</strong>
-                    +57 311 111 1111
+                <hr className="qr-divider"/>
+                <div className="qr-info">
+                  <div className="qr-info-row">
+                    <div className="qr-info-icon"><i className="fas fa-key"></i></div>
+                    <div className="qr-info-text">
+                      <strong>Llave</strong>
+                      @daviigleremacali
+                    </div>
+                  </div>
+                  <div className="qr-info-row">
+                    <div className="qr-info-icon"><i className="fas fa-phone"></i></div>
+                    <div className="qr-info-text">
+                      <strong>Número</strong>
+                      +57 311 111 1111
+                    </div>
                   </div>
                 </div>
               </div>

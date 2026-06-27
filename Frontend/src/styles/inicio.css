@@ -297,7 +297,6 @@ ul { list-style: none; }
    INFO SECTION
 ═══════════════════════════════════ */
 .info-section {
-    background: #0F0F0D;
     padding: 80px 24px;
     color: var(--white);
 }
@@ -311,7 +310,6 @@ ul { list-style: none; }
     width: 96px; height: 96px;
     border-radius: 50%; object-fit: cover;
     margin: 0 auto 24px;
-    border: 2px solid rgba(201,168,76,0.4);
 }
 
 .info-church-name {

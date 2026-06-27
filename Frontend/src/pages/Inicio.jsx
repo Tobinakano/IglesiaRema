@@ -72,7 +72,7 @@ function Inicio() {
         </div>
       </section>
 
-      <section className="info-section">
+      <section className="info-section" style={{ background: '#0F0F0D' }}>
         <div className="info-inner">
 
           <img src="/favicon.png" alt="Logo Iglesia Remanente Cali" className="info-logo" />

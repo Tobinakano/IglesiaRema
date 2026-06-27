@@ -29,7 +29,7 @@ function Equipos() {
           {/* Intercesión */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <i className="fas fa-hands-praying" style={{ fontSize: '28px' }}></i>
+              <i className="fas fa-person-praying" style={{ fontSize: '29px' }}></i>
             </div>
             <span className="ministerio-name">Intercesión</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -47,7 +47,7 @@ function Equipos() {
           {/* RemaKids */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <i className="fas fa-child" style={{ fontSize: '28px' }}></i>
+              <i className="fas fa-children" style={{ fontSize: '28px' }}></i>
             </div>
             <span className="ministerio-name">RemaKids</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -74,7 +74,7 @@ function Equipos() {
           {/* Servicio */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <i className="fas fa-handshake" style={{ fontSize: '28px' }}></i>
+              <i className="fas fa-handshake" style={{ fontSize: '29px' }}></i>
             </div>
             <span className="ministerio-name">Servicio</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>
@@ -101,7 +101,7 @@ function Equipos() {
           {/* Danza */}
           <div className="ministerio-card">
             <div className="ministerio-icon">
-              <img src={pandero} alt="Pandero" />
+              <img src={pandero} alt="Pandero" style={{ width: '37px', color: "#333" }} />
             </div>
             <span className="ministerio-name">Danza</span>
             <a href="#" className="ministerio-btn">Ver equipo →</a>

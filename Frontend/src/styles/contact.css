@@ -6,13 +6,13 @@
    SECTION WRAPPER
 ═══════════════════════════════════ */
 .contacto-section {
-  padding: 120px 24px 180px;
+  padding: 70px 24px 70px;
   background: var(--gray-bg);
 }
 
 .contacto-inner {
   max-width: 1100px;
-  margin: 80px auto 80px;
+  margin: 50px auto 50px;
 }
 
 /* ═══════════════════════════════════

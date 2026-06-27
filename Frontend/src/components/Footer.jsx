@@ -9,22 +9,22 @@ function Footer() {
         <div className="footer-social-icons">
 
           {/* Facebook */}
-          <a href="#">
+          <a href="https://www.facebook.com/iglesiacristianaremanentecali?locale=es_LA">
             <i className="fab fa-facebook" style={{ fontSize: '24px' }}></i>
           </a>
 
           {/* Instagram */}
-          <a href="#">
+          <a href="https://www.instagram.com/remanentecali/">
             <i className="fab fa-instagram" style={{ fontSize: '24px' }}></i>
           </a>
 
           {/* YouTube */}
-          <a href="#">
+          <a href="https://www.youtube.com/@remanentecaliiglesiacristi2110">
             <i className="fab fa-youtube" style={{ fontSize: '24px' }}></i>
           </a>
 
           {/* TikTok */}
-          <a href="#">
+          <a href="https://www.tiktok.com/@remanentecali">
             <i className="fab fa-tiktok" style={{ fontSize: '24px' }}></i>
           </a>
 
