@@ -1,6 +1,6 @@
 import "../styles/global.css";
 import "../styles/equipos.css";
-import pandero from "../assets/images/tamburine.png";
+import pandero from "../assets/images/tambourine.png";
 
 function Equipos() {
   return (
