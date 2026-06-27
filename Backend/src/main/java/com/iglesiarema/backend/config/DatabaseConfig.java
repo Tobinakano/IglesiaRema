@@ -28,12 +28,13 @@ public class DatabaseConfig {
                 
                 String username = dbUri.getUserInfo().split(":")[0];
                 String password = dbUri.getUserInfo().split(":")[1];
-                String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ":" + dbUri.getPort() + dbUri.getPath();
-                
-                // Add SSL parameters to URL if not already present
-                if (!dbUrl.contains("?")) {
-                    dbUrl += "?sslmode=require";
+                int port = dbUri.getPort();
+
+                if (port == -1) {
+                    port = 5432;
                 }
+
+                String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ":" + port + dbUri.getPath() + "?sslmode=require";
 
                 dataSource.setDriverClassName("org.postgresql.Driver");
                 dataSource.setUrl(dbUrl);
