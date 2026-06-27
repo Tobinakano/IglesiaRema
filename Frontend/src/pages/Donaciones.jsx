@@ -34,7 +34,7 @@ function Donaciones() {
                     <div className="qr-info-icon"><i className="fas fa-key"></i></div>
                     <div className="qr-info-text">
                       <strong>Llave</strong>
-                      @daviigleremacali
+                      @DAVIIGLEREMACALI
                     </div>
                   </div>
                   <div className="qr-info-row">
